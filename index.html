@@ -1,0 +1,1856 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ortiz y Cía. Consignatarios</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+:root {
+  --verde: #1a3a2a; --verde-mid: #2d5c3f; --verde-light: #4a8c5c;
+  --verde-pale: #e8f2ec; --crema: #f5f0e8; --crema-dark: #ede6d6;
+  --negro: #0f1a14; --gris: #6b7c72; --gris-light: #c8d4cc;
+  --blanco: #fafaf7; --rojo: #c0392b; --rojo-pale: #fdecea;
+  --amber: #b8720a; --amber-pale: #fef3e2;
+  --azul: #1a4a7a; --azul-pale: #e8f0f8;
+  --r: 4px; --rlg: 8px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{font-size:15px}
+body{font-family:'Syne',sans-serif;background:var(--crema);color:var(--negro);min-height:100vh}
+.app{display:flex;min-height:100vh}
+.sidebar{width:220px;background:var(--verde);color:var(--crema);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:100}
+.sb-logo{padding:1.4rem 1.25rem 1rem;border-bottom:1px solid rgba(255,255,255,.1)}
+.sb-brand{font-size:13px;font-weight:700;letter-spacing:.15em;text-transform:uppercase}
+.sb-sub{font-size:11px;color:rgba(255,255,255,.4);margin-top:3px;font-family:'IBM Plex Mono',monospace}
+.nav-sec{padding:1.25rem 0 .5rem}
+.nav-lbl{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.35);padding:0 1.25rem;margin-bottom:6px;font-family:'IBM Plex Mono',monospace}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 1.25rem;font-size:13.5px;font-weight:500;color:rgba(255,255,255,.65);cursor:pointer;transition:all .15s;border-left:3px solid transparent;user-select:none}
+.nav-item:hover{color:var(--crema);background:rgba(255,255,255,.07)}
+.nav-item.active{color:var(--crema);background:rgba(255,255,255,.1);border-left-color:#7dc89a}
+.main{margin-left:220px;flex:1;min-height:100vh}
+.topbar{background:var(--blanco);border-bottom:1px solid var(--crema-dark);padding:1rem 2rem;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
+.topbar-title{font-size:18px;font-weight:700}
+.topbar-right{display:flex;align-items:center;gap:12px}
+.topbar-date{font-size:12px;color:var(--gris);font-family:'IBM Plex Mono',monospace}
+.sync-badge{font-size:11px;font-family:'IBM Plex Mono',monospace;padding:3px 10px;border-radius:20px;background:#d4edda;color:#1a5c30}
+.sync-badge.syncing{background:var(--amber-pale);color:var(--amber)}
+.sync-badge.error{background:var(--rojo-pale);color:var(--rojo)}
+.content{padding:2rem}
+.page{display:none}.page.active{display:block}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:2rem}
+.stat-card{background:var(--blanco);border:1px solid var(--crema-dark);border-radius:var(--rlg);padding:1rem 1.25rem}
+.stat-card.acc{background:var(--verde);border-color:var(--verde)}
+.stat-lbl{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--gris);margin-bottom:6px;font-family:'IBM Plex Mono',monospace}
+.stat-card.acc .stat-lbl{color:rgba(255,255,255,.5)}
+.stat-val{font-size:22px;font-weight:700;color:var(--negro)}
+.stat-card.acc .stat-val{color:var(--crema)}
+.stat-sub{font-size:11px;color:var(--gris);margin-top:4px}
+.stat-card.acc .stat-sub{color:rgba(255,255,255,.4)}
+.res-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
+.res-card{background:var(--blanco);border:1px solid var(--crema-dark);border-radius:var(--rlg);overflow:hidden}
+.res-head{padding:.9rem 1.25rem;font-weight:700;font-size:14px;display:flex;align-items:center;justify-content:space-between}
+.res-head.gordo{background:var(--verde);color:var(--crema)}
+.res-head.invernada{background:var(--azul);color:#e8f2ff}
+.res-head.vientre{background:#4a1a3a;color:#f5e0ef}
+.res-body{padding:1rem 1.25rem}
+.res-row{display:flex;justify-content:space-between;font-size:13px;padding:5px 0;border-bottom:1px solid var(--crema)}
+.res-row:last-child{border-bottom:none;font-weight:700;font-size:14px}
+.btn{display:inline-flex;align-items:center;gap:7px;padding:8px 16px;border-radius:var(--r);font-size:13px;font-weight:600;font-family:'Syne',sans-serif;cursor:pointer;border:none;transition:all .15s}
+.btn-primary{background:var(--verde);color:var(--crema)}.btn-primary:hover{background:var(--verde-mid)}
+.btn-outline{background:transparent;color:var(--verde);border:1.5px solid var(--verde)}.btn-outline:hover{background:var(--verde-pale)}
+.btn-sm{padding:5px 11px;font-size:12px}
+.btn-danger{background:var(--rojo-pale);color:var(--rojo);border:1px solid #f0b8b4}.btn-danger:hover{background:#f5c6c3}
+.btn-amber{background:var(--amber-pale);color:var(--amber);border:1px solid #f5d898}.btn-amber:hover{background:#fde8b8}
+.tbl-wrap{background:var(--blanco);border:1px solid var(--crema-dark);border-radius:var(--rlg);overflow:hidden;overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px;min-width:700px}
+thead tr{background:var(--crema)}
+th{padding:10px 14px;text-align:left;font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--gris);font-family:'IBM Plex Mono',monospace;border-bottom:1px solid var(--crema-dark);white-space:nowrap}
+td{padding:11px 14px;border-bottom:1px solid var(--crema-dark);color:var(--negro);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tbody tr:hover{background:var(--crema)}
+.mono{font-family:'IBM Plex Mono',monospace;font-size:12.5px}
+.badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;font-family:'IBM Plex Mono',monospace}
+.b-cerrado{background:#d4edda;color:#1a5c30}
+.b-curso{background:var(--azul-pale);color:var(--azul)}
+.b-pendiente{background:var(--amber-pale);color:var(--amber)}
+.b-cancelado{background:var(--rojo-pale);color:var(--rojo)}
+.filters{display:flex;gap:10px;margin-bottom:1rem;flex-wrap:wrap}
+.filters input,.filters select{padding:7px 12px;border:1px solid var(--gris-light);border-radius:var(--r);font-family:'Syne',sans-serif;font-size:13px;background:var(--blanco);color:var(--negro);min-width:160px}
+.filters input:focus,.filters select:focus{outline:none;border-color:var(--verde-light)}
+.sec-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;flex-wrap:wrap;gap:10px}
+.sec-title{font-size:16px;font-weight:700}
+.sec-title span{color:var(--verde-light)}
+.modal-overlay{position:fixed;inset:0;background:rgba(15,26,20,.55);z-index:200;display:none;align-items:center;justify-content:center;padding:1rem}
+.modal-overlay.open{display:flex}
+.modal{background:var(--blanco);border-radius:10px;width:100%;max-width:740px;max-height:92vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.25)}
+.modal-header{padding:1.25rem 1.5rem;border-bottom:1px solid var(--crema-dark);display:flex;align-items:center;justify-content:space-between}
+.modal-title{font-size:16px;font-weight:700}
+.modal-close{background:none;border:none;cursor:pointer;font-size:22px;color:var(--gris);line-height:1}
+.modal-body{padding:1.5rem}
+.modal-footer{padding:1rem 1.5rem;border-top:1px solid var(--crema-dark);display:flex;justify-content:flex-end;gap:10px}
+.fgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(195px,1fr));gap:13px}
+.fg{display:flex;flex-direction:column;gap:5px}
+.fg label{font-size:11px;font-weight:600;color:var(--gris);letter-spacing:.05em;text-transform:uppercase;font-family:'IBM Plex Mono',monospace}
+.fg input,.fg select,.fg textarea{padding:8px 12px;border:1px solid var(--gris-light);border-radius:var(--r);font-family:'Syne',sans-serif;font-size:13.5px;background:var(--blanco);color:var(--negro);transition:border-color .15s}
+.fg input:focus,.fg select:focus{outline:none;border-color:var(--verde-light)}
+.fg.full{grid-column:1/-1}
+.fg textarea{resize:vertical;height:60px}
+.calc{background:var(--crema)!important;color:var(--verde-mid)!important;font-family:'IBM Plex Mono',monospace!important;font-weight:600!important}
+.fdiv{grid-column:1/-1;border:none;border-top:1px solid var(--crema-dark);margin:4px 0}
+.fsec{grid-column:1/-1;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--gris);padding-top:4px;font-family:'IBM Plex Mono',monospace}
+.tipo-tabs{display:flex;gap:4px;margin-bottom:1.5rem;background:var(--crema-dark);padding:4px;border-radius:var(--rlg);width:fit-content}
+.tipo-tab{padding:7px 18px;font-size:13px;font-weight:600;border:none;background:none;border-radius:var(--r);cursor:pointer;color:var(--gris);transition:all .15s;font-family:'Syne',sans-serif}
+.tipo-tab.active{background:var(--blanco);color:var(--negro);box-shadow:0 1px 4px rgba(0,0,0,.1)}
+.liq-page{display:none}.liq-page.active{display:block}
+/* LIQUIDACION */
+.liq-doc{background:#fff;border:1px solid #ddd;border-radius:8px;padding:2.2rem;max-width:760px;margin:0 auto;font-family:'Syne',sans-serif;color:#111}
+.liq-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1.5rem;padding-bottom:1.2rem;border-bottom:2.5px solid var(--verde)}
+.liq-empresa-nm{font-size:20px;font-weight:700;color:var(--verde)}
+.liq-empresa-sub{font-size:12px;color:var(--gris);margin-top:3px}
+.liq-num-box{text-align:right}
+.liq-tipo-badge{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:3px 12px;border-radius:20px;margin-bottom:6px}
+.liq-id{font-size:20px;font-weight:700;font-family:'IBM Plex Mono',monospace;color:var(--verde)}
+.liq-fecha{font-size:12px;color:var(--gris);font-family:'IBM Plex Mono',monospace}
+.liq-cols{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:1.25rem}
+.liq-sec-title{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--gris);font-family:'IBM Plex Mono',monospace;margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid var(--crema-dark)}
+.liq-row{display:flex;justify-content:space-between;padding:4px 0;font-size:13px}
+.liq-row .lbl{color:var(--gris)}
+.liq-row .val{font-weight:600;font-family:'IBM Plex Mono',monospace;font-size:12.5px}
+.liq-hacienda{margin-bottom:1.25rem}
+.liq-tbl{width:100%;border-collapse:collapse;font-size:13px;margin-top:8px}
+.liq-tbl th{background:var(--crema);padding:7px 12px;text-align:left;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--gris);font-family:'IBM Plex Mono',monospace;border-bottom:1px solid var(--crema-dark)}
+.liq-tbl td{padding:8px 12px;border-bottom:1px solid var(--crema-dark);font-family:'IBM Plex Mono',monospace;font-size:12.5px}
+.liq-tbl tr:last-child td{border-bottom:none}
+.liq-gastos-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:1.25rem}
+.liq-gastos-tbl{width:100%;border-collapse:collapse;font-size:12.5px}
+.liq-gastos-tbl td{padding:5px 0;border-bottom:1px solid var(--crema)}
+.liq-gastos-tbl tr:last-child td{border-bottom:none}
+.liq-gastos-tbl .lbl{color:var(--gris);font-size:12px}
+.liq-gastos-tbl .val{text-align:right;font-family:'IBM Plex Mono',monospace;font-weight:600}
+.liq-gastos-tbl .neg{color:var(--rojo)}
+.liq-netos{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem}
+.liq-neto-box{background:var(--crema);border-radius:6px;padding:1rem 1.25rem}
+.liq-neto-lbl{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--gris);margin-bottom:6px;font-family:'IBM Plex Mono',monospace}
+.liq-neto-val{font-size:20px;font-weight:700;font-family:'IBM Plex Mono',monospace;color:var(--verde)}
+.liq-neto-quien{font-size:12px;color:var(--gris);margin-top:4px}
+.loading-overlay{position:fixed;inset:0;background:rgba(245,240,232,.85);z-index:500;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px}
+.loading-overlay.hidden{display:none}
+.spinner{width:36px;height:36px;border:3px solid var(--gris-light);border-top-color:var(--verde);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-txt{font-size:13px;color:var(--gris);font-family:'IBM Plex Mono',monospace}
+@media print{
+  .sidebar,.topbar,.no-print{display:none!important}
+  .main{margin-left:0}
+  .content{padding:0}
+  .liq-doc{border:none;box-shadow:none;max-width:100%;padding:1.5rem}
+  .page.active{display:block}
+}
+</style>
+</head>
+<body>
+
+<div class="loading-overlay hidden" id="loading-overlay">
+  <div class="spinner"></div>
+  <div class="loading-txt">Conectando con la base de datos...</div>
+</div>
+
+<div class="app">
+<aside class="sidebar">
+  <div class="sb-logo">
+    <div class="sb-brand">Ortiz y Cía.</div>
+    <div class="sb-sub" id="sb-fecha"></div>
+  </div>
+  <div class="nav-sec">
+    <div class="nav-lbl">Panel</div>
+    <div class="nav-item active" onclick="navTo('resumen',this)">◈ &nbsp;Resumen general</div>
+  </div>
+  <div class="nav-sec">
+    <div class="nav-lbl">Negocios</div>
+    <div class="nav-item" onclick="navTo('gordos',this)">▲ &nbsp;Gordos</div>
+    <div class="nav-item" onclick="navTo('invernada',this)">◇ &nbsp;Invernada</div>
+    <div class="nav-item" onclick="navTo('vientres',this)">○ &nbsp;Vientres</div>
+  </div>
+  <div class="nav-sec">
+    <div class="nav-lbl">Gestión</div>
+    <div class="nav-item" onclick="navTo('liquidaciones',this)">≡ &nbsp;Liq. internas</div>
+    <div class="nav-item" onclick="navTo('resumen-mensual',this)">📅 &nbsp;Resumen mensual</div>
+    <div class="nav-item" onclick="navTo('liq-externas',this)">⇄ &nbsp;Liq. externas</div>
+  </div>
+</aside>
+
+<main class="main">
+  <div class="topbar">
+    <div class="topbar-title" id="topbar-title">Resumen general</div>
+    <div class="topbar-right">
+      <span class="sync-badge syncing" id="sync-badge">⟳ conectando</span>
+      <button class="btn btn-outline btn-sm" onclick="cerrarSesion()" style="font-size:12px">Cerrar sesión</button>
+      <div class="topbar-date" id="topbar-date"></div>
+    </div>
+  </div>
+  <div class="content">
+
+    <div id="page-resumen" class="page active">
+      <div class="stats" id="stats-resumen"></div>
+      <div class="res-grid" id="res-grid"></div>
+    </div>
+
+    <div id="page-gordos" class="page">
+      <div class="sec-header">
+        <div class="sec-title">Negocios — <span>Gordos</span></div>
+        <button class="btn btn-primary" onclick="abrirModal('gordo')">+ Nuevo</button>
+      </div>
+      <div class="filters">
+        <input type="text" placeholder="Buscar..." id="q-gordo" oninput="renderTabla('gordo')">
+        <select id="est-gordo" onchange="renderTabla('gordo')">
+          <option value="">Todos los estados</option>
+          <option>En curso</option><option>Cerrado</option><option>Pendiente</option><option>Cancelado</option>
+        </select>
+      </div>
+      <div class="tbl-wrap"><table>
+        <thead><tr>
+          <th>#</th><th>Fecha</th><th>Vendedor</th><th>Comprador</th>
+          <th>Cat.</th><th>Cab.</th><th>Kg prom.</th><th>$/kg</th><th>Total</th>
+          <th>Com.V</th><th>Com.C</th><th>Estado</th><th></th>
+        </tr></thead>
+        <tbody id="tbody-gordo"></tbody>
+      </table></div>
+    </div>
+
+    <div id="page-invernada" class="page">
+      <div class="sec-header">
+        <div class="sec-title">Negocios — <span>Invernada</span></div>
+        <button class="btn btn-primary" onclick="abrirModal('invernada')">+ Nuevo</button>
+      </div>
+      <div class="filters">
+        <input type="text" placeholder="Buscar..." id="q-invernada" oninput="renderTabla('invernada')">
+        <select id="est-invernada" onchange="renderTabla('invernada')">
+          <option value="">Todos los estados</option>
+          <option>En curso</option><option>Cerrado</option><option>Pendiente</option><option>Cancelado</option>
+        </select>
+      </div>
+      <div class="tbl-wrap"><table>
+        <thead><tr>
+          <th>#</th><th>Fecha</th><th>Vendedor</th><th>Comprador</th>
+          <th>Cat.</th><th>Cab.</th><th>Kg prom.</th><th>$/kg</th><th>Total</th>
+          <th>Com.V</th><th>Com.C</th><th>Estado</th><th></th>
+        </tr></thead>
+        <tbody id="tbody-invernada"></tbody>
+      </table></div>
+    </div>
+
+    <div id="page-vientres" class="page">
+      <div class="sec-header">
+        <div class="sec-title">Negocios — <span>Vientres</span></div>
+        <button class="btn btn-primary" onclick="abrirModal('vientre')">+ Nuevo</button>
+      </div>
+      <div class="filters">
+        <input type="text" placeholder="Buscar..." id="q-vientre" oninput="renderTabla('vientre')">
+        <select id="est-vientre" onchange="renderTabla('vientre')">
+          <option value="">Todos los estados</option>
+          <option>En curso</option><option>Cerrado</option><option>Pendiente</option><option>Cancelado</option>
+        </select>
+      </div>
+      <div class="tbl-wrap"><table>
+        <thead><tr>
+          <th>#</th><th>Fecha</th><th>Cat.</th><th>Vendedor</th><th>Comprador</th>
+          <th>Cab.</th><th>$/cab</th><th>Total</th>
+          <th>Com.V</th><th>Com.C</th><th>Estado</th><th></th>
+        </tr></thead>
+        <tbody id="tbody-vientre"></tbody>
+      </table></div>
+    </div>
+
+    <div id="page-liquidaciones" class="page">
+      <div class="sec-header"><div class="sec-title">Liquidaciones</div></div>
+      <div class="tipo-tabs no-print">
+        <button class="tipo-tab active" onclick="switchLiqTab('vendedor',this)">Liquidación Vendedor</button>
+        <button class="tipo-tab" onclick="switchLiqTab('comprador',this)">Liquidación Comprador</button>
+      </div>
+      <div id="liq-vendedor" class="liq-page active">
+        <div class="filters no-print" style="margin-bottom:1.5rem">
+          <select id="liq-sel-v" onchange="renderLiq('vendedor')" style="min-width:340px;max-width:500px"></select>
+          <button class="btn btn-outline btn-sm no-print" onclick="window.print()">🖨 Imprimir / PDF</button>
+        </div>
+        <div id="liq-content-v"></div>
+      </div>
+      <div id="liq-comprador" class="liq-page">
+        <div class="filters no-print" style="margin-bottom:1.5rem">
+          <select id="liq-sel-c" onchange="renderLiq('comprador')" style="min-width:340px;max-width:500px"></select>
+          <button class="btn btn-outline btn-sm no-print" onclick="window.print()">🖨 Imprimir / PDF</button>
+        </div>
+        <div id="liq-content-c"></div>
+      </div>
+    </div>
+
+    <!-- PAGE: RESUMEN MENSUAL -->
+    <div id="page-resumen-mensual" class="page">
+      <div class="sec-header">
+        <div class="sec-title">Resumen <span>mensual</span></div>
+        <div style="display:flex;gap:10px;align-items:center">
+          <select id="rm-anio" onchange="renderResumenMensual()" style="padding:7px 12px;border:1px solid var(--gris-light);border-radius:var(--r);font-family:'Syne',sans-serif;font-size:13px;background:var(--blanco)"></select>
+        </div>
+      </div>
+      <div id="rm-chart-wrap" style="background:var(--blanco);border:1px solid var(--crema-dark);border-radius:var(--rlg);padding:1.5rem;margin-bottom:1.5rem">
+        <canvas id="rm-chart" style="max-height:300px"></canvas>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr>
+            <th>Mes</th>
+            <th>Gordos</th><th>Invernada</th><th>Vientres</th><th>Total negocios</th>
+            <th>Cabezas</th>
+            <th>Monto operado</th>
+            <th>Com. vendedor</th><th>Com. comprador</th>
+            <th>Total comisiones</th>
+          </tr></thead>
+          <tbody id="rm-tbody"></tbody>
+          <tfoot id="rm-tfoot"></tfoot>
+        </table>
+      </div>
+    </div>
+
+    <!-- PAGE: LIQ EXTERNAS -->
+    <div id="page-liq-externas" class="page">
+      <div class="sec-header"><div class="sec-title">Liquidaciones <span>externas</span></div></div>
+      <div class="filters no-print">
+        <input type="text" placeholder="Buscar..." id="q-liq-ext" oninput="renderLiqExternas()">
+        <select id="filt-liq-ext" onchange="renderLiqExternas()">
+          <option value="">Todos los tipos</option>
+          <option>Gordo</option><option>Invernada</option><option>Vientres</option>
+        </select>
+      </div>
+      <div class="tbl-wrap"><table>
+        <thead><tr>
+          <th>#</th><th>Fecha</th><th>Tipo</th><th>Vendedor</th><th>Comprador</th>
+          <th>Cab.</th><th>Total</th><th>Liquida</th><th>Estado</th><th></th>
+        </tr></thead>
+        <tbody id="tbody-liq-ext"></tbody>
+      </table></div>
+    </div>
+
+  </div>
+</main>
+</div>
+
+<!-- MODAL GORDO -->
+<div class="modal-overlay" id="modal-gordo">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title">Nuevo negocio — Gordo (Faena)</div><button class="modal-close" onclick="cerrarModal('gordo')">×</button></div>
+    <div class="modal-body"><div class="fgrid">
+      <div class="fg"><label>Fecha faena</label><input type="date" id="go-fecha"></div>
+      <div class="fg"><label>Estado</label><select id="go-estado"><option>En curso</option><option>Cerrado</option><option>Pendiente</option><option>Cancelado</option></select></div>
+      <div class="fg"><label>Frigorífico</label><input type="text" id="go-frigorifico" placeholder="Nombre del frigorífico"></div>
+      <div class="fg"><label>Remitente (Vendedor)</label><input type="text" id="go-vendedor" placeholder="Nombre / razón social"></div>
+      <div class="fg"><label>Comprador</label><input type="text" id="go-comprador" placeholder="Nombre / razón social"></div>
+      <div class="fg"><label>¿Quién liquida?</label>
+        <select id="go-liquidador" onchange="toggleLiqExt('go')">
+          <option value="ortiz">Ortiz y Cía.</option>
+          <option value="tercero">Otra empresa</option>
+        </select>
+      </div>
+      <div class="fg" id="go-liq-ext-wrap" style="display:none"><label>Nombre empresa liquidadora</label><input type="text" id="go-liq-ext" placeholder="Nombre de la empresa"></div>
+      <div class="fsec">Hacienda</div>
+      <div class="fg"><label>Categoría</label><select id="go-cat"><option>Vacas</option><option>Novillos</option><option>Novillitos</option><option>Toros</option><option>Vaquillonas</option></select></div>
+      <div class="fg"><label>Cabezas totales</label><input type="number" id="go-cab" min="1" placeholder="0" oninput="calcG()"></div>
+      <div class="fg"><label>Kg vivos brutos (tot.)</label><input type="number" id="go-kgb" placeholder="0" oninput="calcG()"></div>
+      <div class="fg"><label>Desbaste (%)</label><input type="number" id="go-dsb" value="0" step="0.1" oninput="calcG()"></div>
+      <div class="fg"><label>Kg vivos netos (calc.)</label><input type="text" id="go-kgn" class="calc" readonly></div>
+      <div class="fg"><label>Kg vivos prom/cab (calc.)</label><input type="text" id="go-kgprom" class="calc" readonly></div>
+
+      <div class="fsec">Tabla de faena</div>
+      <div class="fg full" style="overflow-x:auto">
+        <table style="width:100%;min-width:500px;border-collapse:collapse;font-size:13px">
+          <thead><tr style="background:var(--crema)">
+            <th style="padding:7px 10px;text-align:left;font-size:11px;color:var(--gris);font-family:'IBM Plex Mono',monospace;border-bottom:1px solid var(--crema-dark)">Clasificación</th>
+            <th style="padding:7px 10px;text-align:left;font-size:11px;color:var(--gris);font-family:'IBM Plex Mono',monospace;border-bottom:1px solid var(--crema-dark)">Cab.</th>
+            <th style="padding:7px 10px;text-align:left;font-size:11px;color:var(--gris);font-family:'IBM Plex Mono',monospace;border-bottom:1px solid var(--crema-dark)">Kg carne</th>
+            <th style="padding:7px 10px;text-align:left;font-size:11px;color:var(--gris);font-family:'IBM Plex Mono',monospace;border-bottom:1px solid var(--crema-dark)">$/kg</th>
+            <th style="padding:7px 10px;text-align:left;font-size:11px;color:var(--gris);font-family:'IBM Plex Mono',monospace;border-bottom:1px solid var(--crema-dark)">Total</th>
+            <th style="padding:7px 4px;border-bottom:1px solid var(--crema-dark)"></th>
+          </tr></thead>
+          <tbody id="go-faena-tbody"></tbody>
+        </table>
+        <button type="button" class="btn btn-outline btn-sm" style="margin-top:8px" onclick="addFilaFaena()">+ Agregar fila</button>
+      </div>
+      <div class="fg"><label>Total kg carne (calc.)</label><input type="text" id="go-kg-carne" class="calc" readonly></div>
+      <div class="fg"><label>Rinde % (calc.)</label><input type="text" id="go-rinde" class="calc" readonly></div>
+      <div class="fg"><label>Total faena (calc.)</label><input type="text" id="go-total-faena" class="calc" readonly></div>
+      <div class="fg"><label>$/kg promedio (calc.)</label><input type="text" id="go-prom-kg" class="calc" readonly></div>
+
+      <div class="fsec">Distribución del total</div>
+      <div class="fg"><label>% A liquidar (ej: 70)</label><input type="number" id="go-pct-liq" value="70" step="0.1" oninput="calcG()"></div>
+      <div class="fg"><label>$ A liquidar (calc.)</label><input type="text" id="go-monto-liq" class="calc" readonly></div>
+      <div class="fg"><label>% ASN (calc.)</label><input type="text" id="go-pct-asn" class="calc" readonly></div>
+      <div class="fg"><label>$ ASN (calc.)</label><input type="text" id="go-asn" class="calc" readonly></div>
+
+      <div class="fsec">Liquidación — Tabla de categorías a liquidar</div>
+      <div class="fg full" style="overflow-x:auto">
+        <table style="width:100%;min-width:500px;border-collapse:collapse;font-size:13px">
+          <thead><tr style="background:var(--crema)">
+            <th style="padding:7px 10px;text-align:left;font-size:11px;color:var(--gris);font-family:'IBM Plex Mono',monospace;border-bottom:1px solid var(--crema-dark)">Categoría</th>
+            <th style="padding:7px 10px;text-align:left;font-size:11px;color:var(--gris);font-family:'IBM Plex Mono',monospace;border-bottom:1px solid var(--crema-dark)">Cant.</th>
+            <th style="padding:7px 10px;text-align:left;font-size:11px;color:var(--negro);font-family:'IBM Plex Mono',monospace;border-bottom:1px solid var(--crema-dark)">Kg/cab</th>
+            <th style="padding:7px 10px;text-align:left;font-size:11px;color:var(--verde-mid);font-family:'IBM Plex Mono',monospace;border-bottom:1px solid var(--crema-dark)">Kg tot.</th>
+            <th style="padding:7px 10px;text-align:left;font-size:11px;color:var(--azul);font-family:'IBM Plex Mono',monospace;border-bottom:1px solid var(--crema-dark)">$/kg</th>
+            <th style="padding:7px 10px;text-align:left;font-size:11px;color:var(--gris);font-family:'IBM Plex Mono',monospace;border-bottom:1px solid var(--crema-dark)">Total</th>
+            <th style="padding:7px 4px;border-bottom:1px solid var(--crema-dark);font-size:10px;color:var(--azul);font-family:'IBM Plex Mono',monospace">tipo</th>
+          </tr></thead>
+          <tbody id="go-liq-tbody"></tbody>
+        </table>
+        <button type="button" class="btn btn-outline btn-sm" style="margin-top:8px" onclick="addFilaLiq()">+ Agregar fila</button>
+      </div>
+
+      <div class="fsec">Plazos</div>
+      <div class="fg"><label>Plazo venta (días)</label><input type="number" id="go-p1v" placeholder="23" oninput="calcG()"></div>
+      <div class="fg"><label>Vto. venta</label><input type="text" id="go-v1v" class="calc" readonly></div>
+      <div class="fg"><label>Plazo compra (días)</label><input type="number" id="go-p1c" placeholder="21" oninput="calcG()"></div>
+      <div class="fg"><label>Vto. compra</label><input type="text" id="go-v1c" class="calc" readonly></div>
+
+      <div class="fsec">Gastos — Vendedor</div>
+      <div class="fg full"><label>Comisión y gastos se calculan sobre</label>
+        <select id="go-base-calculo" onchange="calcG()">
+          <option value="asn">ASN (porcentaje no liquidado)</option>
+          <option value="total">Total de faena completo</option>
+        </select>
+      </div>
+      <div class="fg"><label>Base de cálculo (calc.)</label><input type="text" id="go-base-val" class="calc" readonly></div>
+      <div class="fg"><label>Comisión V. (%)</label><input type="number" id="go-comv" value="3" step="0.1" oninput="calcG()"></div>
+      <div class="fg"><label>$ Comisión V.</label><input type="text" id="go-comv_val" class="calc" readonly></div>
+      <div class="fg"><label>Gasto procesamiento V. (%)</label><input type="number" id="go-gopv" value="0.5" step="0.1" oninput="calcG()"></div>
+      <div class="fg"><label>$ Gasto proc. V.</label><input type="text" id="go-gopv_val" class="calc" readonly></div>
+      <div class="fg"><label>Imp. Semoviente V. (% s/fila 1 liq.)</label><input type="number" id="go-semv" value="0" step="0.001" oninput="calcG()"></div>
+      <div class="fg"><label>$ Semoviente V.</label><input type="text" id="go-semv_val" class="calc" readonly></div>
+      <div class="fg"><label>Ing. Brutos V. (% s/fila 1 liq.)</label><input type="number" id="go-ibv" value="0" step="0.1" oninput="calcG()"></div>
+      <div class="fg"><label>$ Ing. Brutos V.</label><input type="text" id="go-ibv_val" class="calc" readonly></div>
+      <div class="fg"><label>Imp. Ganancias — Mín. no imponible ($)</label><input type="number" id="go-ganv-mni" value="224000" step="1000" placeholder="224000" oninput="calcG()"></div>
+      <div class="fg"><label>Imp. Ganancias — % sobre excedente</label><input type="number" id="go-ganv-pct" value="2" step="0.1" placeholder="2" oninput="calcG()"></div>
+      <div class="fg"><label>$ Imp. Ganancias V.</label><input type="text" id="go-ganv_val" class="calc" readonly></div>
+      <div class="fg"><label>Total gastos V. (calc.)</label><input type="text" id="go-total-gastos-v" class="calc" readonly></div>
+      <div class="fg"><label>ASN neto vendedor (calc.) — s/com.+proc.</label><input type="text" id="go-asn-neto-v" class="calc" readonly></div>
+
+      <div class="fsec">Gastos — Comprador</div>
+      <div class="fg full" style="font-size:12px;color:var(--gris);font-family:'IBM Plex Mono',monospace;padding:4px 0">Comisión y gasto proc. → sobre base seleccionada. IVA → sobre total liquidado. Total = liquidado + IVA − gastos.</div>
+      <div class="fg"><label>Comisión C. (%) — opcional</label><input type="number" id="go-comc" value="0" step="0.1" oninput="calcG()"></div>
+      <div class="fg"><label>$ Comisión C.</label><input type="text" id="go-comc_val" class="calc" readonly></div>
+      <div class="fg"><label>Gasto procesamiento C. (%)</label><input type="number" id="go-gopc" value="0" step="0.1" oninput="calcG()"></div>
+      <div class="fg"><label>$ Gasto proc. C.</label><input type="text" id="go-gopc_val" class="calc" readonly></div>
+      <div class="fg"><label>IVA sobre liquidado (%)</label><input type="number" id="go-ivac" value="10.5" step="0.1" oninput="calcG()"></div>
+      <div class="fg"><label>$ IVA (s/liquidado)</label><input type="text" id="go-ivac_val" class="calc" readonly></div>
+      <div class="fg" style="display:none"><input type="number" id="go-ivaliq" value="0"><input type="text" id="go-ivaliq_val"></div>
+      <div class="fg"><label>Total a pagar comprador (calc.)</label><input type="text" id="go-asn-neto-c" class="calc" readonly></div>
+
+      <div class="fg full"><label>Observaciones</label><textarea id="go-obs" placeholder="Frigorífico, procedencia, sanidad, etc."></textarea></div>
+    </div></div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="cerrarModal('gordo')">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardar('gordo')">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL INVERNADA -->
+<div class="modal-overlay" id="modal-invernada">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title">Nuevo negocio — Invernada</div><button class="modal-close" onclick="cerrarModal('invernada')">×</button></div>
+    <div class="modal-body"><div class="fgrid">
+      <div class="fg"><label>Fecha de carga</label><input type="date" id="in-fecha"></div>
+      <div class="fg"><label>Estado</label><select id="in-estado"><option>En curso</option><option>Cerrado</option><option>Pendiente</option><option>Cancelado</option></select></div>
+      <div class="fg"><label>Vendedor</label><input type="text" id="in-vendedor" placeholder="Nombre / razón social"></div>
+      <div class="fg"><label>Comprador</label><input type="text" id="in-comprador" placeholder="Nombre / razón social"></div>
+      <div class="fg"><label>¿Quién liquida?</label>
+        <select id="in-liquidador" onchange="toggleLiqExt('in')">
+          <option value="ortiz">Ortiz y Cía.</option>
+          <option value="tercero">Otra empresa</option>
+        </select>
+      </div>
+      <div class="fg" id="in-liq-ext-wrap" style="display:none"><label>Nombre empresa liquidadora</label><input type="text" id="in-liq-ext" placeholder="Nombre de la empresa"></div>
+      <div class="fsec">Hacienda — Categoría 1</div>
+      <div class="fg"><label>Categoría</label><select id="in-cat"><option>Terneros</option><option>Terneras</option><option>Novillitos</option><option>Vaquillonas</option></select></div>
+      <div class="fg"><label>Cabezas</label><input type="number" id="in-cab" min="1" placeholder="0" oninput="calcI()"></div>
+      <div class="fg"><label>Kg brutos (tot.)</label><input type="number" id="in-kgb" placeholder="0" oninput="calcI()"></div>
+      <div class="fg"><label>Desbaste (%)</label><input type="number" id="in-dsb" value="0" step="0.1" oninput="calcI()"></div>
+      <div class="fg"><label>Kg netos (calc.)</label><input type="text" id="in-kgn" class="calc" readonly></div>
+      <div class="fg"><label>Kg prom. neto (calc.)</label><input type="text" id="in-kgprom" class="calc" readonly></div>
+      <div class="fsec">Precio cat. 1 con descuento por exceso de peso</div>
+      <div class="fg"><label>Precio base ($/kg)</label><input type="number" id="in-pb" placeholder="0" oninput="calcI()"></div>
+      <div class="fg"><label>Peso base (kg)</label><input type="number" id="in-pesob" value="200" oninput="calcI()"></div>
+      <div class="fg"><label>Peso tope (kg)</label><input type="number" id="in-pesot" value="250" oninput="calcI()"></div>
+      <div class="fg"><label>Dscto. por kg extra ($/kg)</label><input type="number" id="in-dscto" placeholder="0" oninput="calcI()"></div>
+      <div class="fg"><label>Kg sobre peso base</label><input type="text" id="in-sobrepeso" class="calc" readonly></div>
+      <div class="fg"><label>Precio final ($/kg)</label><input type="text" id="in-pf" class="calc" readonly></div>
+      <div class="fg"><label>Subtotal cat. 1 (calc.)</label><input type="text" id="in-subtotal1" class="calc" readonly></div>
+
+      <div class="fsec" style="display:flex;align-items:center;justify-content:space-between">
+        <span>Hacienda — Categoría 2 <span style="font-size:10px;color:var(--gris)">(opcional)</span></span>
+        <button type="button" class="btn btn-outline btn-sm" onclick="toggleCat2()" id="btn-cat2" style="font-size:11px">+ Agregar cat. 2</button>
+      </div>
+      <div id="in-cat2-wrap" style="display:none;grid-column:1/-1">
+        <div class="fgrid" style="margin-top:8px">
+          <div class="fg"><label>Categoría 2</label><select id="in-cat2"><option>Terneros</option><option>Terneras</option><option>Novillitos</option><option>Vaquillonas</option></select></div>
+          <div class="fg"><label>Cabezas</label><input type="number" id="in-cab2" min="1" placeholder="0" oninput="calcI()"></div>
+          <div class="fg"><label>Kg brutos (tot.)</label><input type="number" id="in-kgb2" placeholder="0" oninput="calcI()"></div>
+          <div class="fg"><label>Desbaste (%)</label><input type="number" id="in-dsb2" value="0" step="0.1" oninput="calcI()"></div>
+          <div class="fg"><label>Kg netos (calc.)</label><input type="text" id="in-kgn2" class="calc" readonly></div>
+          <div class="fg"><label>Kg prom. neto (calc.)</label><input type="text" id="in-kgprom2" class="calc" readonly></div>
+          <div class="fg"><label>Precio base ($/kg)</label><input type="number" id="in-pb2" placeholder="0" oninput="calcI()"></div>
+          <div class="fg"><label>Peso base (kg)</label><input type="number" id="in-pesob2" value="200" oninput="calcI()"></div>
+          <div class="fg"><label>Peso tope (kg)</label><input type="number" id="in-pesot2" value="250" oninput="calcI()"></div>
+          <div class="fg"><label>Dscto. por kg extra ($/kg)</label><input type="number" id="in-dscto2" placeholder="0" oninput="calcI()"></div>
+          <div class="fg"><label>Kg sobre peso base</label><input type="text" id="in-sobrepeso2" class="calc" readonly></div>
+          <div class="fg"><label>Precio final ($/kg)</label><input type="text" id="in-pf2" class="calc" readonly></div>
+          <div class="fg"><label>Subtotal cat. 2 (calc.)</label><input type="text" id="in-subtotal2" class="calc" readonly></div>
+        </div>
+      </div>
+
+      <div class="fsec">Totales combinados</div>
+      <div class="fg"><label>Total cabezas (calc.)</label><input type="text" id="in-cab-total" class="calc" readonly></div>
+      <div class="fg"><label>Importe total (calc.)</label><input type="text" id="in-total" class="calc" readonly></div>
+      <div class="fg"><label>Precio por cabeza prom. (calc.)</label><input type="text" id="in-pcab" class="calc" readonly></div>
+      <div class="fsec">Plazos — Venta</div>
+      <div class="fg"><label>Plazo 1 (días)</label><input type="number" id="in-p1v" placeholder="33" oninput="calcI()"></div>
+      <div class="fg"><label>Vto. 1 venta</label><input type="text" id="in-v1v" class="calc" readonly></div>
+      <div class="fg"><label>Plazo 2 (días)</label><input type="number" id="in-p2v" placeholder="63" oninput="calcI()"></div>
+      <div class="fg"><label>Vto. 2 venta</label><input type="text" id="in-v2v" class="calc" readonly></div>
+      <div class="fsec">Plazos — Compra</div>
+      <div class="fg"><label>Plazo 1 (días)</label><input type="number" id="in-p1c" placeholder="30" oninput="calcI()"></div>
+      <div class="fg"><label>Vto. 1 compra</label><input type="text" id="in-v1c" class="calc" readonly></div>
+      <div class="fg"><label>Plazo 2 (días)</label><input type="number" id="in-p2c" placeholder="60" oninput="calcI()"></div>
+      <div class="fg"><label>Vto. 2 compra</label><input type="text" id="in-v2c" class="calc" readonly></div>
+      <div class="fsec">Gastos — Vendedor</div>
+      <div class="fg"><label>Comisión V. (%)</label><input type="number" id="in-comv" value="3" step="0.1" oninput="calcI()"></div>
+      <div class="fg"><label>$ Comisión V.</label><input type="text" id="in-comv_val" class="calc" readonly></div>
+      <div class="fg"><label>Gastos operativos V. (%)</label><input type="number" id="in-gopv" value="0.5" step="0.1" oninput="calcI()"></div>
+      <div class="fg"><label>$ Gastos op. V.</label><input type="text" id="in-gopv_val" class="calc" readonly></div>
+      <div class="fg"><label>Der. Registro V. (%)</label><input type="number" id="in-regv" value="0" step="0.1" oninput="calcI()"></div>
+      <div class="fg"><label>$ Der. Registro V.</label><input type="text" id="in-regv_val" class="calc" readonly></div>
+      <div class="fg"><label>Semoviente V. (%)</label><input type="number" id="in-semv" value="0.525" step="0.001" oninput="calcI()"></div>
+      <div class="fg"><label>$ Semoviente V.</label><input type="text" id="in-semv_val" class="calc" readonly></div>
+      <div class="fg"><label>Imp. Ganancias V. (%)</label><input type="number" id="in-ganv" value="0" step="0.1" oninput="calcI()"></div>
+      <div class="fg"><label>$ Imp. Ganancias V.</label><input type="text" id="in-ganv_val" class="calc" readonly></div>
+      <div class="fsec">Gastos — Comprador</div>
+      <div class="fg"><label>Comisión C. (%)</label><input type="number" id="in-comc" value="3" step="0.1" oninput="calcI()"></div>
+      <div class="fg"><label>$ Comisión C.</label><input type="text" id="in-comc_val" class="calc" readonly></div>
+      <div class="fg"><label>Gastos operativos C. (%)</label><input type="number" id="in-gopc" value="0.5" step="0.1" oninput="calcI()"></div>
+      <div class="fg"><label>$ Gastos op. C.</label><input type="text" id="in-gopc_val" class="calc" readonly></div>
+      <div class="fg"><label>Der. Registro C. (%)</label><input type="number" id="in-regc" value="0" step="0.1" oninput="calcI()"></div>
+      <div class="fg"><label>$ Der. Registro C.</label><input type="text" id="in-regc_val" class="calc" readonly></div>
+      <div class="fg"><label>Semoviente C. (%)</label><input type="number" id="in-semc" value="0.525" step="0.001" oninput="calcI()"></div>
+      <div class="fg"><label>$ Semoviente C.</label><input type="text" id="in-semc_val" class="calc" readonly></div>
+      <div class="fg"><label>Imp. Ganancias C. (%)</label><input type="number" id="in-ganc" value="0" step="0.1" oninput="calcI()"></div>
+      <div class="fg"><label>$ Imp. Ganancias C.</label><input type="text" id="in-ganc_val" class="calc" readonly></div>
+      <div class="fg"><label>IVA C. (% s/total liquidado)</label><input type="number" id="in-ivac" value="10.5" step="0.1" oninput="calcI()"></div>
+      <div class="fg"><label>$ IVA C.</label><input type="text" id="in-ivac_val" class="calc" readonly></div>
+      <div class="fg"><label>Total a pagar comprador (calc.)</label><input type="text" id="in-total-c" class="calc" readonly></div>
+      <div class="fsec">Distribución del pago (ASN)</div>
+      <div class="fg"><label>% A liquidar (ej: 70)</label><input type="number" id="in-pct-liq" value="100" step="0.1" oninput="calcI()"></div>
+      <div class="fg"><label>$ A liquidar (calc.)</label><input type="text" id="in-monto-liq" class="calc" readonly></div>
+      <div class="fg"><label>% ASN (calc.)</label><input type="text" id="in-pct-asn" class="calc" readonly></div>
+      <div class="fg"><label>$ ASN (calc.)</label><input type="text" id="in-asn" class="calc" readonly></div>
+      <div class="fg full"><label>Observaciones</label><textarea id="in-obs" placeholder="Raza, procedencia, condición, etc."></textarea></div>
+    </div></div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="cerrarModal('invernada')">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardar('invernada')">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL VIENTRE -->
+<div class="modal-overlay" id="modal-vientre">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title">Nuevo negocio — Vientres</div><button class="modal-close" onclick="cerrarModal('vientre')">×</button></div>
+    <div class="modal-body"><div class="fgrid">
+      <div class="fg"><label>Fecha</label><input type="date" id="vi-fecha"></div>
+      <div class="fg"><label>Estado</label><select id="vi-estado"><option>En curso</option><option>Cerrado</option><option>Pendiente</option><option>Cancelado</option></select></div>
+      <div class="fg"><label>Categoría</label><select id="vi-cat"><option>Vacas preñadas</option><option>Vacas con cría</option><option>Vaquillonas preñadas</option><option>Vacas vacías</option></select></div>
+      <div class="fg"><label>Vendedor</label><input type="text" id="vi-vendedor" placeholder="Nombre / razón social"></div>
+      <div class="fg"><label>Comprador</label><input type="text" id="vi-comprador" placeholder="Nombre / razón social"></div>
+      <div class="fg"><label>¿Quién liquida?</label>
+        <select id="vi-liquidador" onchange="toggleLiqExt('vi')">
+          <option value="ortiz">Ortiz y Cía.</option>
+          <option value="tercero">Otra empresa</option>
+        </select>
+      </div>
+      <div class="fg" id="vi-liq-ext-wrap" style="display:none"><label>Nombre empresa liquidadora</label><input type="text" id="vi-liq-ext" placeholder="Nombre de la empresa"></div>
+      <div class="fsec">Precio</div>
+      <div class="fg"><label>Cabezas</label><input type="number" id="vi-cab" min="1" placeholder="0" oninput="calcV()"></div>
+      <div class="fg"><label>Precio ($/cabeza)</label><input type="number" id="vi-precio" placeholder="0" oninput="calcV()"></div>
+      <div class="fg"><label>Total (calc.)</label><input type="text" id="vi-total" class="calc" readonly></div>
+      <div class="fsec">Plazos — Venta</div>
+      <div class="fg"><label>Plazo 1 (días)</label><input type="number" id="vi-p1v" placeholder="30" oninput="calcV()"></div>
+      <div class="fg"><label>Vto. 1</label><input type="text" id="vi-v1v" class="calc" readonly></div>
+      <div class="fg"><label>Plazo 2 (días)</label><input type="number" id="vi-p2v" placeholder="60" oninput="calcV()"></div>
+      <div class="fg"><label>Vto. 2</label><input type="text" id="vi-v2v" class="calc" readonly></div>
+      <div class="fsec">Plazos — Compra</div>
+      <div class="fg"><label>Plazo 1 (días)</label><input type="number" id="vi-p1c" placeholder="30" oninput="calcV()"></div>
+      <div class="fg"><label>Vto. 1</label><input type="text" id="vi-v1c" class="calc" readonly></div>
+      <div class="fg"><label>Plazo 2 (días)</label><input type="number" id="vi-p2c" placeholder="60" oninput="calcV()"></div>
+      <div class="fg"><label>Vto. 2</label><input type="text" id="vi-v2c" class="calc" readonly></div>
+      <div class="fsec">Gastos — Vendedor</div>
+      <div class="fg"><label>Comisión V. (%)</label><input type="number" id="vi-comv" value="3" step="0.1" oninput="calcV()"></div>
+      <div class="fg"><label>$ Comisión V.</label><input type="text" id="vi-comv_val" class="calc" readonly></div>
+      <div class="fg"><label>Gastos op. V. (%)</label><input type="number" id="vi-gopv" value="0.5" step="0.1" oninput="calcV()"></div>
+      <div class="fg"><label>$ Gastos op. V.</label><input type="text" id="vi-gopv_val" class="calc" readonly></div>
+      <div class="fg"><label>Der. Registro V. (%)</label><input type="number" id="vi-regv" value="0" step="0.1" oninput="calcV()"></div>
+      <div class="fg"><label>$ Der. Registro V.</label><input type="text" id="vi-regv_val" class="calc" readonly></div>
+      <div class="fg"><label>Semoviente V. (%)</label><input type="number" id="vi-semv" value="0.525" step="0.001" oninput="calcV()"></div>
+      <div class="fg"><label>$ Semoviente V.</label><input type="text" id="vi-semv_val" class="calc" readonly></div>
+      <div class="fg"><label>Imp. Ganancias V. (%)</label><input type="number" id="vi-ganv" value="0" step="0.1" oninput="calcV()"></div>
+      <div class="fg"><label>$ Ganancias V.</label><input type="text" id="vi-ganv_val" class="calc" readonly></div>
+      <div class="fsec">Gastos — Comprador</div>
+      <div class="fg"><label>Comisión C. (%)</label><input type="number" id="vi-comc" value="3" step="0.1" oninput="calcV()"></div>
+      <div class="fg"><label>$ Comisión C.</label><input type="text" id="vi-comc_val" class="calc" readonly></div>
+      <div class="fg"><label>Gastos op. C. (%)</label><input type="number" id="vi-gopc" value="0.5" step="0.1" oninput="calcV()"></div>
+      <div class="fg"><label>$ Gastos op. C.</label><input type="text" id="vi-gopc_val" class="calc" readonly></div>
+      <div class="fg"><label>Der. Registro C. (%)</label><input type="number" id="vi-regc" value="0" step="0.1" oninput="calcV()"></div>
+      <div class="fg"><label>$ Der. Registro C.</label><input type="text" id="vi-regc_val" class="calc" readonly></div>
+      <div class="fg"><label>Semoviente C. (%)</label><input type="number" id="vi-semc" value="0.525" step="0.001" oninput="calcV()"></div>
+      <div class="fg"><label>$ Semoviente C.</label><input type="text" id="vi-semc_val" class="calc" readonly></div>
+      <div class="fg"><label>Imp. Ganancias C. (%)</label><input type="number" id="vi-ganc" value="0" step="0.1" oninput="calcV()"></div>
+      <div class="fg"><label>$ Ganancias C.</label><input type="text" id="vi-ganc_val" class="calc" readonly></div>
+      <div class="fg full"><label>Observaciones</label><textarea id="vi-obs" placeholder="% preñez, servicio, raza, etc."></textarea></div>
+    </div></div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="cerrarModal('vientre')">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardar('vientre')">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+// ── FIREBASE SDK ──────────────────────────────────
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import { getDatabase, ref, get, set, push, remove } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js';
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDF_QryJYQ9wXAMPcG3k6haLsyfrU-MFhY",
+  authDomain: "ortiz-consignatarios.firebaseapp.com",
+  databaseURL: "https://ortiz-consignatarios-default-rtdb.firebaseio.com",
+  projectId: "ortiz-consignatarios",
+  storageBucket: "ortiz-consignatarios.firebasestorage.app",
+  messagingSenderId: "857513648593",
+  appId: "1:857513648593:web:c211ff6c5a62d0330f80f0"
+};
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+
+// ── LOGIN UI ──────────────────────────────────────
+const loginHTML = `
+<div id="login-screen" style="position:fixed;inset:0;background:var(--crema);z-index:999;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;">
+  <div style="background:var(--blanco);border:1px solid var(--crema-dark);border-radius:10px;padding:2.5rem;width:100%;max-width:380px;box-shadow:0 8px 40px rgba(0,0,0,0.1)">
+    <div style="text-align:center;margin-bottom:2rem">
+      <div style="font-size:13px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--verde);margin-bottom:4px">Ortiz y Cía.</div>
+      <div style="font-size:11px;color:var(--gris);font-family:'IBM Plex Mono',monospace">Consignatarios</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div>
+        <label style="font-size:11px;font-weight:600;color:var(--gris);letter-spacing:.05em;text-transform:uppercase;font-family:'IBM Plex Mono',monospace;display:block;margin-bottom:5px">Email</label>
+        <input type="email" id="login-email" placeholder="tu@email.com" style="width:100%;padding:10px 12px;border:1px solid var(--gris-light);border-radius:4px;font-family:'Syne',sans-serif;font-size:14px;background:var(--blanco);color:var(--negro)">
+      </div>
+      <div>
+        <label style="font-size:11px;font-weight:600;color:var(--gris);letter-spacing:.05em;text-transform:uppercase;font-family:'IBM Plex Mono',monospace;display:block;margin-bottom:5px">Contraseña</label>
+        <input type="password" id="login-pass" placeholder="••••••••" style="width:100%;padding:10px 12px;border:1px solid var(--gris-light);border-radius:4px;font-family:'Syne',sans-serif;font-size:14px;background:var(--blanco);color:var(--negro)">
+      </div>
+      <div id="login-error" style="font-size:12px;color:var(--rojo);display:none;text-align:center;font-family:'IBM Plex Mono',monospace"></div>
+      <button id="login-btn" onclick="doLogin()" style="background:var(--verde);color:var(--crema);border:none;border-radius:4px;padding:11px;font-size:14px;font-weight:600;font-family:'Syne',sans-serif;cursor:pointer;margin-top:4px">Ingresar</button>
+    </div>
+  </div>
+</div>`;
+document.body.insertAdjacentHTML('beforeend', loginHTML);
+
+window.doLogin = async function(){
+  const email = document.getElementById('login-email').value.trim();
+  const pass  = document.getElementById('login-pass').value;
+  const err   = document.getElementById('login-error');
+  const btn   = document.getElementById('login-btn');
+  err.style.display='none';
+  btn.textContent='Ingresando...'; btn.disabled=true;
+  try {
+    await signInWithEmailAndPassword(auth, email, pass);
+  } catch(e) {
+    err.textContent = 'Email o contraseña incorrectos';
+    err.style.display='block';
+    btn.textContent='Ingresar'; btn.disabled=false;
+  }
+};
+document.addEventListener('keydown', e=>{ if(e.key==='Enter') window.doLogin(); });
+
+window.cerrarSesion = async function(){
+  await signOut(auth);
+};
+
+onAuthStateChanged(auth, user => {
+  const loginScreen = document.getElementById('login-screen');
+  const overlay = document.getElementById('loading-overlay');
+  if(user){
+    if(loginScreen) loginScreen.remove();
+    overlay.classList.remove('hidden');
+    initDB();
+  } else {
+    overlay.classList.add('hidden');
+    if(!document.getElementById('login-screen')){
+      document.body.insertAdjacentHTML('beforeend', loginHTML);
+      document.getElementById('login-btn').addEventListener('click', window.doLogin);
+    }
+  }
+});
+
+// ── FIREBASE REALTIME DATABASE SDK ───────────────
+const rtdb = getDatabase(app);
+
+// ── LOCAL DB (cache) ─────────────────────────────
+let db = { gordos:[], invernadas:[], vientres:[] };
+
+// ── FIREBASE DB HELPERS (usan auth automaticamente) ──
+async function fbGet(path){
+  try {
+    const snap = await get(ref(rtdb, path));
+    return snap.exists() ? snap.val() : null;
+  } catch(e){ console.error('fbGet',e); return null; }
+}
+async function fbPush(path, data){
+  setSyncBadge('syncing');
+  try {
+    const r = await push(ref(rtdb, path), data);
+    setSyncBadge('ok');
+    return r.key;
+  } catch(e){ console.error('fbPush',e); setSyncBadge('error'); return null; }
+}
+async function fbDelete(path){
+  setSyncBadge('syncing');
+  try {
+    await remove(ref(rtdb, path));
+    setSyncBadge('ok'); return true;
+  } catch(e){ console.error('fbDelete',e); setSyncBadge('error'); return false; }
+}
+
+function setSyncBadge(state){
+  const b = $('sync-badge');
+  if(state==='ok'){ b.textContent='✓ sincronizado'; b.className='sync-badge'; }
+  else if(state==='syncing'){ b.textContent='⟳ guardando'; b.className='sync-badge syncing'; }
+  else { b.textContent='✗ error de red'; b.className='sync-badge error'; }
+}
+
+// ── INIT: cargar datos desde Firebase ────────────
+async function initDB(){
+  try {
+    const data = await fbGet('negocios');
+    if(data){
+      db.gordos    = objToArr(data.gordos);
+      db.invernadas= objToArr(data.invernadas);
+      db.vientres  = objToArr(data.vientres);
+    }
+    setSyncBadge('ok');
+  } catch(e){
+    setSyncBadge('error');
+  }
+  $('loading-overlay').classList.add('hidden');
+  renderResumen();
+}
+
+// Firebase devuelve objetos {key: {...}}, los convertimos a array guardando el firebaseKey
+function objToArr(obj){
+  if(!obj) return [];
+  return Object.entries(obj).map(([k,v])=>({...v, _fbKey:k}));
+}
+
+// ── UTILS ─────────────────────────────────────────
+const $ = id => document.getElementById(id);
+function fmt(n){return Number(n||0).toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2});}
+function fmtI(n){return Number(n||0).toLocaleString('es-AR',{minimumFractionDigits:0,maximumFractionDigits:0});}
+function today(){return new Date().toISOString().split('T')[0];}
+function fd(f){if(!f)return'—';const[y,m,d]=f.split('-');return`${d}/${m}/${y}`;}
+function addDays(dateStr,days){
+  if(!dateStr||!days)return'';
+  const d=new Date(dateStr);
+  d.setDate(d.getDate()+parseInt(days));
+  const iso=d.toISOString().split('T')[0];
+  const dias=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+  // Use local date to avoid timezone shift
+  const [y,m,dy]=iso.split('-').map(Number);
+  const local=new Date(y,m-1,dy);
+  return dias[local.getDay()]+' '+fd(iso);
+}
+
+// DATE
+(function(){
+  const d=new Date();
+  const dias=['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+  const mes=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+  $('topbar-date').textContent=`${dias[d.getDay()]} ${d.getDate()} ${mes[d.getMonth()]} ${d.getFullYear()}`;
+  $('sb-fecha').textContent=`${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()}`;
+  ['go-fecha','in-fecha','vi-fecha'].forEach(id=>{const el=$(id);if(el)el.value=today();});
+})();
+
+// NAV
+const TTLS={resumen:'Resumen general',gordos:'Gordos',invernada:'Invernada',vientres:'Vientres',liquidaciones:'Liquidaciones internas','liq-externas':'Liquidaciones externas','resumen-mensual':'Resumen mensual'};
+function navTo(id,el){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  $('page-'+id).classList.add('active');
+  el.classList.add('active');
+  $('topbar-title').textContent=TTLS[id];
+  if(id==='resumen')renderResumen();
+  if(id==='gordos')renderTabla('gordo');
+  if(id==='invernada')renderTabla('invernada');
+  if(id==='vientres')renderTabla('vientre');
+  if(id==='liquidaciones')poblarLiq();
+  if(id==='liq-externas')renderLiqExternas();
+  if(id==='resumen-mensual')renderResumenMensual();
+}
+
+// MODAL
+function abrirModal(t){
+  $('modal-'+t).classList.add('open');
+  if(t==='gordo'){
+    if(!$('go-faena-tbody').querySelectorAll('tr').length){ addFilaFaena(); addFilaFaena(); addFilaFaena(); }
+    if(!$('go-liq-tbody').querySelectorAll('tr').length){ addFilaLiq(); addFilaLiq(); }
+  }
+}
+function cerrarModal(t){$('modal-'+t).classList.remove('open');}
+document.querySelectorAll('.modal-overlay').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');}));
+
+// CALC
+function calcNeg(p,usaPrecioBase){
+  const cab=parseFloat($(p+'-cab')?.value)||0;
+  const kgb=parseFloat($(p+'-kgb')?.value)||0;
+  const dsb=parseFloat($(p+'-dsb')?.value)||0;
+  const kgn=kgb*(1-dsb/100);
+  const kgprom=cab>0?kgn/cab:0;
+  if($(p+'-kgn'))$(p+'-kgn').value=kgn?fmtI(Math.round(kgn))+' kg':'';
+  if($(p+'-kgprom'))$(p+'-kgprom').value=kgprom?fmtI(Math.round(kgprom))+' kg':'';
+  let total=0,pf=0;
+  if(usaPrecioBase){
+    const pb=parseFloat($(p+'-pb')?.value)||0;
+    const pesob=parseFloat($(p+'-pesob')?.value)||0;
+    const pesot=parseFloat($(p+'-pesot')?.value)||0;
+    const dscto=parseFloat($(p+'-dscto')?.value)||0;
+    const sobrepeso=Math.max(0,Math.min(kgprom,pesot)-pesob);
+    pf=pb-sobrepeso*dscto;
+    if($(p+'-sobrepeso'))$(p+'-sobrepeso').value=sobrepeso?sobrepeso.toFixed(1)+' kg':'0 kg';
+    if($(p+'-pf'))$(p+'-pf').value=pf?'$'+fmt(pf):'';
+    total=kgn*pf;
+    if($(p+'-total'))$(p+'-total').value=total?'$'+fmt(total):'';
+    if($(p+'-pcab'))$(p+'-pcab').value=(cab&&total)?'$'+fmt(total/cab):'';
+  } else {
+    const precio=parseFloat($(p+'-precio')?.value)||0;
+    total=cab*precio;
+    if($(p+'-total'))$(p+'-total').value=total?'$'+fmt(total):'';
+  }
+  const fecha=$(p+'-fecha')?.value||'';
+  ['p1v','p2v','p1c','p2c'].forEach(pl=>{
+    const dias=parseFloat($(p+'-'+pl)?.value)||0;
+    const vtoKey=pl.replace('p','v');
+    if($(p+'-'+vtoKey))$(p+'-'+vtoKey).value=dias&&fecha?addDays(fecha,dias):'';
+  });
+  ['comv','gopv','regv','semv','ganv','comc','gopc','regc','semc','ganc'].forEach(g=>{
+    const pct=parseFloat($(p+'-'+g)?.value)||0;
+    const el=$(p+'-'+g+'_val');
+    if(el)el.value=pct&&total?'$'+fmt(total*pct/100):'';
+  });
+}
+// ── TOGGLE LIQUIDADOR EXTERNO ─────────────────────
+function toggleLiqExt(p){
+  const sel=$(p+'-liquidador');
+  const wrap=$(p+'-liq-ext-wrap');
+  if(sel&&wrap) wrap.style.display=sel.value==='tercero'?'flex':'none';
+}
+
+
+function addFilaFaena(){
+  const tbody=$('go-faena-tbody');
+  const idx=tbody.querySelectorAll('tr').length;
+  const tr=document.createElement('tr');
+  tr.innerHTML=`
+    <td><input type="text" placeholder="ej: carnicera" style="width:110px;padding:5px 8px;border:1px solid var(--gris-light);border-radius:var(--r);font-size:12.5px" oninput="calcG()"></td>
+    <td><input type="number" placeholder="0" style="width:60px;padding:5px 8px;border:1px solid var(--gris-light);border-radius:var(--r);font-size:12.5px" oninput="calcG()"></td>
+    <td><input type="number" placeholder="0" style="width:80px;padding:5px 8px;border:1px solid var(--gris-light);border-radius:var(--r);font-size:12.5px" oninput="calcG()"></td>
+    <td><input type="number" placeholder="0" style="width:80px;padding:5px 8px;border:1px solid var(--gris-light);border-radius:var(--r);font-size:12.5px" oninput="calcG()"></td>
+    <td><input type="text" class="calc" readonly style="width:100px;padding:5px 8px;font-size:12px"></td>
+    <td><button type="button" onclick="this.closest('tr').remove();calcG()" style="background:none;border:none;cursor:pointer;color:var(--rojo);font-size:16px;padding:2px 6px">×</button></td>`;
+  tbody.appendChild(tr);
+}
+function addFilaLiq(){
+  const tbody=$('go-liq-tbody');
+  const isFirst=tbody.querySelectorAll('tr').length===0;
+  const tr=document.createElement('tr');
+  if(isFirst){
+    // Primera fila: precio calculado como saldo
+    tr.innerHTML=`
+      <td><input type="text" placeholder="ej: nov" style="width:100px;padding:5px 8px;border:1px solid var(--gris-light);border-radius:var(--r);font-size:12.5px" oninput="calcG()"></td>
+      <td><input type="number" placeholder="0" style="width:55px;padding:5px 8px;border:1px solid var(--gris-light);border-radius:var(--r);font-size:12.5px" oninput="calcG()"></td>
+      <td><input type="number" placeholder="kg/cab" style="width:75px;padding:5px 8px;border:1px solid var(--gris-light);border-radius:var(--r);font-size:12.5px" oninput="calcG()" title="Peso x cabeza"></td>
+      <td><input type="text" class="calc" readonly style="width:75px;padding:5px 8px;font-size:12px" title="kg totales calculados"></td>
+      <td><input type="text" class="calc" readonly style="width:95px;padding:5px 8px;font-size:12px;color:var(--azul)" title="$/kg — saldo automático"></td>
+      <td><input type="text" class="calc" readonly style="width:110px;padding:5px 8px;font-size:12px;color:var(--azul)" title="total saldo"></td>
+      <td><span style="font-size:10px;color:var(--azul);font-family:'IBM Plex Mono',monospace;padding:0 4px">= saldo</span></td>`;
+  } else {
+    // Filas siguientes: precio manual
+    tr.innerHTML=`
+      <td><input type="text" placeholder="ej: vaq" style="width:100px;padding:5px 8px;border:1px solid var(--gris-light);border-radius:var(--r);font-size:12.5px" oninput="calcG()"></td>
+      <td><input type="number" placeholder="0" style="width:55px;padding:5px 8px;border:1px solid var(--gris-light);border-radius:var(--r);font-size:12.5px" oninput="calcG()"></td>
+      <td><input type="number" placeholder="kg/cab" style="width:75px;padding:5px 8px;border:1px solid var(--gris-light);border-radius:var(--r);font-size:12.5px" oninput="calcG()" title="Peso x cabeza"></td>
+      <td><input type="text" class="calc" readonly style="width:75px;padding:5px 8px;font-size:12px" title="kg totales calculados"></td>
+      <td><input type="number" placeholder="precio/kg" style="width:95px;padding:5px 8px;border:1px solid var(--gris-light);border-radius:var(--r);font-size:12.5px" oninput="calcG()"></td>
+      <td><input type="text" class="calc" readonly style="width:110px;padding:5px 8px;font-size:12px"></td>
+      <td><button type="button" onclick="this.closest('tr').remove();calcG()" style="background:none;border:none;cursor:pointer;color:var(--rojo);font-size:16px;padding:2px 6px">×</button></td>`;
+  }
+  tbody.appendChild(tr);
+}
+function getFaenaRows(){
+  const rows=[];
+  $('go-faena-tbody').querySelectorAll('tr').forEach(tr=>{
+    const ins=tr.querySelectorAll('input');
+    const clasificacion=ins[0].value.trim();
+    const cab=parseFloat(ins[1].value)||0;
+    const kg=parseFloat(ins[2].value)||0;
+    const precioKg=parseFloat(ins[3].value)||0;
+    const total=kg*precioKg;
+    ins[4].value=total?'$'+fmt(total):'';
+    if(clasificacion||cab||kg||precioKg) rows.push({clasificacion,cab,kg,precioKg,total});
+  });
+  return rows;
+}
+function getLiqRows(){
+  // Leer montoLiq del campo calculado en el DOM
+  const montoLiqStr=$('go-monto-liq')?.value||'0';
+  const montoLiqTotal=parseFloat(montoLiqStr.replace(/[$.]/g,'').replace(/,/g,'.'))||0;
+  const rows=[];
+  const trs=$('go-liq-tbody').querySelectorAll('tr');
+
+  // Primero calcular las filas manuales (fila 2 en adelante)
+  // ins[0]=cat, ins[1]=cant, ins[2]=pesoCab(manual), ins[3]=kg(calc), ins[4]=precio, ins[5]=total
+  let sumaOtras=0;
+  trs.forEach((tr,i)=>{
+    if(i===0) return;
+    const ins=tr.querySelectorAll('input');
+    const cat=ins[0].value.trim();
+    const cant=parseFloat(ins[1].value)||0;
+    const pesoCab=parseFloat(ins[2].value)||0;
+    const kg=cant*pesoCab;                          // kg = cant × peso/cab
+    ins[3].value=kg?fmtI(Math.round(kg))+' kg':'';
+    const precio=parseFloat(ins[4].value)||0;
+    const total=kg*precio;
+    ins[5].value=total?'$'+fmt(total):'';
+    sumaOtras+=total;
+    if(cat||cant||pesoCab||precio) rows.push({cat,cant,pesoCab,kg,kgCab:pesoCab,precio,total,esSaldo:false});
+  });
+
+  // Primera fila: absorbe el saldo
+  if(trs.length>0){
+    const tr=trs[0];
+    const ins=tr.querySelectorAll('input');
+    const cat=ins[0].value.trim();
+    const cant=parseFloat(ins[1].value)||0;
+    const pesoCab=parseFloat(ins[2].value)||0;
+    const kg=cant*pesoCab;                          // kg = cant × peso/cab
+    ins[3].value=kg?fmtI(Math.round(kg))+' kg':'';
+    const totalSaldo=montoLiqTotal-sumaOtras;
+    const precio=kg>0?totalSaldo/kg:0;
+    ins[4].value=precio?'$'+fmt(precio):'';
+    ins[5].value=totalSaldo?'$'+fmt(totalSaldo):'';
+    if(cat||cant||pesoCab) rows.unshift({cat,cant,pesoCab,kg,kgCab:pesoCab,precio,total:totalSaldo,esSaldo:true});
+  }
+  return rows;
+}
+function calcG(){
+  const cab=parseFloat($('go-cab')?.value)||0;
+  const kgb=parseFloat($('go-kgb')?.value)||0;
+  const dsb=parseFloat($('go-dsb')?.value)||0;
+  const kgn=kgb*(1-dsb/100);
+  const kgprom=cab>0?kgn/cab:0;
+  $('go-kgn').value=kgn?fmtI(Math.round(kgn))+' kg':'';
+  $('go-kgprom').value=kgprom?fmtI(Math.round(kgprom))+' kg':'';
+
+  // tabla faena
+  const faenaRows=getFaenaRows();
+  const totalKgCarne=faenaRows.reduce((a,r)=>a+r.kg,0);
+  const totalFaena=faenaRows.reduce((a,r)=>a+r.total,0);
+  const rinde=kgn>0?(totalKgCarne/kgn*100):0;
+  const promKg=totalKgCarne>0?(totalFaena/totalKgCarne):0;
+  $('go-kg-carne').value=totalKgCarne?fmtI(totalKgCarne)+' kg':'';
+  $('go-rinde').value=rinde?rinde.toFixed(2)+'%':'';
+  $('go-total-faena').value=totalFaena?'$'+fmt(totalFaena):'';
+  $('go-prom-kg').value=promKg?'$'+fmt(promKg)+'/kg':'';
+
+  // distribución — primero para que getLiqRows tenga montoLiq en el DOM
+  const pctLiq=parseFloat($('go-pct-liq')?.value)||0;
+  const montoLiq=totalFaena*pctLiq/100;
+  const pctAsn=100-pctLiq;
+  const asn=totalFaena-montoLiq;
+  $('go-monto-liq').value=montoLiq?'$'+fmt(montoLiq):'';
+  $('go-pct-asn').value=pctAsn.toFixed(1)+'%';
+  $('go-asn').value=asn?'$'+fmt(asn):'';
+
+  // tabla liquidar — después de tener montoLiq
+  const liqRowsCalc=getLiqRows();
+  const totalFilaSaldo=liqRowsCalc.length>0?liqRowsCalc[0].total:0; // fila 1 = saldo
+
+  // base de cálculo para gastos
+  const baseCalculo=$('go-base-calculo')?.value||'asn';
+  const baseVal=baseCalculo==='asn'?asn:totalFaena;
+  if($('go-base-val'))$('go-base-val').value=baseVal?'$'+fmt(baseVal)+' ('+(baseCalculo==='asn'?'ASN':'Total faena')+')':'';
+
+  // gastos vendedor
+  // comisión y gasto proc → sobre base seleccionada (ASN o total faena)
+  // semoviente e ing. brutos → sobre total fila 1 de liquidar (fila saldo, igual que Excel)
+  const comvPct=parseFloat($('go-comv')?.value)||0;
+  const gopvPct=parseFloat($('go-gopv')?.value)||0;
+  const semvPct=parseFloat($('go-semv')?.value)||0;
+  const ibvPct=parseFloat($('go-ibv')?.value)||0;
+  const ganvMni=parseFloat($('go-ganv-mni')?.value)||0;
+  const ganvPct=parseFloat($('go-ganv-pct')?.value)||0;
+  const comv_val=baseVal*comvPct/100;
+  const gopv_val=baseVal*gopvPct/100;
+  const semv_val=totalFilaSaldo*semvPct/100;   // sobre fila 1 saldo
+  const ibv_val=totalFilaSaldo*ibvPct/100;     // sobre fila 1 saldo
+  const ganvBase=Math.max(0,totalFilaSaldo-ganvMni);
+  const ganv_val=ganvBase*ganvPct/100;
+  const totalGastosV=comv_val+gopv_val+semv_val+ibv_val+ganv_val;
+  $('go-comv_val').value=comv_val?'$'+fmt(comv_val):'';
+  $('go-gopv_val').value=gopv_val?'$'+fmt(gopv_val):'';
+  $('go-semv_val').value=semv_val?'$'+fmt(semv_val):'';
+  $('go-ibv_val').value=ibv_val?'$'+fmt(ibv_val):'';
+  if($('go-ganv_val'))$('go-ganv_val').value=ganv_val?'$'+fmt(ganv_val):'';
+  if($('go-total-gastos-v'))$('go-total-gastos-v').value=totalGastosV?'$'+fmt(totalGastosV):'';
+  // ASN neto = ASN - comisión - gasto proc SOLAMENTE (semoviente/impuestos van sobre liquidado, no restan del ASN)
+  const asnNetoV=asn-comv_val-gopv_val;
+  $('go-asn-neto-v').value=asn?'$'+fmt(asnNetoV):'';
+
+  // gastos comprador
+  // comisión y gasto proc → sobre base seleccionada
+  // IVA → sobre total liquidado
+  const comcPct=parseFloat($('go-comc')?.value)||0;
+  const gopcPct=parseFloat($('go-gopc')?.value)||0;
+  const ivacPct=parseFloat($('go-ivac')?.value)||0;
+  const ivaliqPct=parseFloat($('go-ivaliq')?.value)||0;
+  const comc_val=baseVal*comcPct/100;
+  const gopc_val=baseVal*gopcPct/100;
+  const ivac_val=montoLiq*ivacPct/100;       // IVA sobre total liquidado
+  const ivaliq_val=montoLiq*ivaliqPct/100;   // IVA s/liquidado (mismo concepto, se puede dejar en 0)
+  $('go-comc_val').value=comc_val?'$'+fmt(comc_val):'';
+  $('go-gopc_val').value=gopc_val?'$'+fmt(gopc_val):'';
+  $('go-ivac_val').value=ivac_val?'$'+fmt(ivac_val):'';
+  if($('go-ivaliq_val'))$('go-ivaliq_val').value=ivaliq_val?'$'+fmt(ivaliq_val):'';
+  const totalPagarC=montoLiq+ivac_val-comc_val-gopc_val;  // liquidado + IVA - gastos
+  $('go-asn-neto-c').value=totalFaena?'$'+fmt(totalPagarC):'';
+
+  // plazos
+  const fecha=$('go-fecha')?.value||'';
+  const p1v=parseFloat($('go-p1v')?.value)||0;
+  const p1c=parseFloat($('go-p1c')?.value)||0;
+  $('go-v1v').value=p1v&&fecha?addDays(fecha,p1v):'';
+  $('go-v1c').value=p1c&&fecha?addDays(fecha,p1c):'';
+}
+function calcCat(cab, kgb, dsb, pb, pesob, pesot, dscto){
+  const kgn = kgb*(1-dsb/100);
+  const kgprom = cab>0 ? kgn/cab : 0;
+  const sobrepeso = Math.max(0, Math.min(kgprom, pesot) - pesob);
+  const pf = pb - sobrepeso*dscto;
+  const total = kgn*pf;
+  return {kgn, kgprom, sobrepeso, pf, total};
+}
+function calcI(){
+  // Cat 1
+  const cab1=parseFloat($('in-cab')?.value)||0;
+  const kgb1=parseFloat($('in-kgb')?.value)||0;
+  const dsb1=parseFloat($('in-dsb')?.value)||0;
+  const pb1=parseFloat($('in-pb')?.value)||0;
+  const pesob1=parseFloat($('in-pesob')?.value)||0;
+  const pesot1=parseFloat($('in-pesot')?.value)||0;
+  const dscto1=parseFloat($('in-dscto')?.value)||0;
+  const r1=calcCat(cab1,kgb1,dsb1,pb1,pesob1,pesot1,dscto1);
+  $('in-kgn').value=r1.kgn?fmtI(Math.round(r1.kgn))+' kg':'';
+  $('in-kgprom').value=r1.kgprom?fmtI(Math.round(r1.kgprom))+' kg':'';
+  $('in-sobrepeso').value=r1.sobrepeso?r1.sobrepeso.toFixed(1)+' kg':'0 kg';
+  $('in-pf').value=r1.pf?'$'+fmt(r1.pf):'';
+  $('in-subtotal1').value=r1.total?'$'+fmt(r1.total):'';
+
+  // Cat 2 (opcional)
+  let total2=0, kgn2=0, kgprom2=0, cab2=0;
+  const cat2visible=$('in-cat2-wrap')?.style.display!=='none';
+  if(cat2visible){
+    cab2=parseFloat($('in-cab2')?.value)||0;
+    const kgb2=parseFloat($('in-kgb2')?.value)||0;
+    const dsb2=parseFloat($('in-dsb2')?.value)||0;
+    const pb2=parseFloat($('in-pb2')?.value)||0;
+    const pesob2=parseFloat($('in-pesob2')?.value)||0;
+    const pesot2=parseFloat($('in-pesot2')?.value)||0;
+    const dscto2=parseFloat($('in-dscto2')?.value)||0;
+    const r2=calcCat(cab2,kgb2,dsb2,pb2,pesob2,pesot2,dscto2);
+    kgn2=r2.kgn; kgprom2=r2.kgprom; total2=r2.total;
+    $('in-kgn2').value=r2.kgn?fmtI(Math.round(r2.kgn))+' kg':'';
+    $('in-kgprom2').value=r2.kgprom?fmtI(Math.round(r2.kgprom))+' kg':'';
+    $('in-sobrepeso2').value=r2.sobrepeso?r2.sobrepeso.toFixed(1)+' kg':'0 kg';
+    $('in-pf2').value=r2.pf?'$'+fmt(r2.pf):'';
+    $('in-subtotal2').value=r2.total?'$'+fmt(r2.total):'';
+  }
+
+  // Totales combinados
+  const cabTotal=cab1+cab2;
+  const totalCombinado=r1.total+total2;
+  $('in-cab-total').value=cabTotal?fmtI(cabTotal)+' cab':'';
+  $('in-total').value=totalCombinado?'$'+fmt(totalCombinado):'';
+  $('in-pcab').value=(cabTotal&&totalCombinado)?'$'+fmt(totalCombinado/cabTotal):'';
+
+  // Plazos
+  const fecha=$('in-fecha')?.value||'';
+  ['p1v','p2v','p1c','p2c'].forEach(pl=>{
+    const dias=parseFloat($('in-'+pl)?.value)||0;
+    const vtoKey=pl.replace('p','v');
+    if($('in-'+vtoKey))$('in-'+vtoKey).value=dias&&fecha?addDays(fecha,dias):'';
+  });
+
+  // Gastos sobre total combinado
+  const total=totalCombinado;
+  ['comv','gopv','regv','semv','ganv','comc','gopc','regc','semc','ganc'].forEach(g=>{
+    const pct=parseFloat($('in-'+g)?.value)||0;
+    const el=$('in-'+g+'_val');
+    if(el)el.value=pct&&total?'$'+fmt(total*pct/100):'';
+  });
+  // IVA comprador sobre total liquidado
+  if($('in-pct-liq')){
+    const pctLiqIva=parseFloat($('in-pct-liq')?.value)||100;
+    const montoLiqIva=total*pctLiqIva/100;
+    const ivacPct=parseFloat($('in-ivac')?.value)||0;
+    const ivac_val=montoLiqIva*ivacPct/100;
+    if($('in-ivac_val'))$('in-ivac_val').value=ivac_val?'$'+fmt(ivac_val):'';
+    const comcPct=parseFloat($('in-comc')?.value)||0;
+    const gopcPct=parseFloat($('in-gopc')?.value)||0;
+    const totalC=montoLiqIva+ivac_val-(total*comcPct/100)-(total*gopcPct/100);
+    if($('in-total-c'))$('in-total-c').value=totalC?'$'+fmt(totalC):'';
+  }
+
+  // ASN
+  if($('in-pct-liq')){
+    const pctLiq=parseFloat($('in-pct-liq')?.value)||100;
+    const montoLiq=total*pctLiq/100;
+    const asn=total-montoLiq;
+    $('in-monto-liq').value=montoLiq?'$'+fmt(montoLiq):'';
+    $('in-pct-asn').value=(100-pctLiq).toFixed(1)+'%';
+    $('in-asn').value=asn?'$'+fmt(asn):'';
+  }
+}
+function toggleCat2(){
+  const wrap=$('in-cat2-wrap');
+  const btn=$('btn-cat2');
+  if(!wrap)return;
+  if(wrap.style.display==='none'){
+    wrap.style.display='block';
+    btn.textContent='− Quitar cat. 2';
+  } else {
+    wrap.style.display='none';
+    btn.textContent='+ Agregar cat. 2';
+    ['in-cab2','in-kgb2','in-pb2'].forEach(id=>{const el=$(id);if(el)el.value='';});
+    calcI();
+  }
+}
+function calcV(){calcNeg('vi',false);}
+
+// GUARDAR
+function getNum(id){return parseFloat($(id)?.value)||0;}
+function buildGastos(p,total){
+  const g={};
+  ['comv','gopv','regv','semv','ganv','comc','gopc','regc','semc','ganc'].forEach(k=>{
+    const pct=getNum(p+'-'+k);
+    g[k+'Pct']=pct; g[k+'_val']=total*pct/100;
+  });
+  return g;
+}
+async function guardar(tipo){
+  let neg_extra={};
+  const p=tipo==='gordo'?'go':tipo==='invernada'?'in':'vi';
+  const cab=getNum(p+'-cab');
+  const fecha=$(p+'-fecha').value||today();
+  let total=0,pf=0,kgb=0,kgn=0,kgprom=0,pb=0,pesob=0,pesot=0,dscto=0,sobrepeso=0,precio=0;
+  if(tipo==='gordo'){
+    const kgb2=getNum('go-kgb'); const dsb=getNum('go-dsb');
+    kgn=kgb2*(1-dsb/100); kgprom=kgn>0?(kgn/cab):0; kgb=kgb2;
+    // faena rows
+    const faenaRows=getFaenaRows();
+    const liqRows=getLiqRows();
+    const totalKgCarne=faenaRows.reduce((a,r)=>a+r.kg,0);
+    total=faenaRows.reduce((a,r)=>a+r.total,0);
+    const pctLiq=getNum('go-pct-liq');
+    const montoLiq=total*pctLiq/100;
+    const asn=total-montoLiq;
+    const baseCalculo2=getNum('go-pct-liq')>0?($('go-base-calculo')?.value||'asn'):'asn';
+    const baseVal2=baseCalculo2==='asn'?asn:total;
+    const comvPct=getNum('go-comv'), gopvPct=getNum('go-gopv');
+    const semvPct=getNum('go-semv'), ibvPct=getNum('go-ibv');
+    const ganvFijo=getNum('go-ganv');
+    const comcPct=getNum('go-comc'), gopcPct=getNum('go-gopc');
+    const ivacPct=getNum('go-ivac'), ivaliqPct=getNum('go-ivaliq');
+    const neg={
+      id:Date.now(), tipo, fecha, estado:$('go-estado').value,
+      frigorifico:$('go-frigorifico').value.trim(),
+      vendedor:$('go-vendedor').value.trim(),
+      comprador:$('go-comprador').value.trim(),
+      liquidador: $('go-liquidador')?.value==='tercero' ? ($('go-liq-ext')?.value.trim()||'Tercero') : 'Ortiz y Cía.',
+      cat:$('go-cat').value,
+      cab, kgb, kgn:Math.round(kgn), kgprom:Math.round(kgprom),
+      faenaRows, liqRows,
+      totalKgCarne, rinde:kgn>0?totalKgCarne/kgn:0,
+      total, pctLiq, montoLiq, asn,
+      comvPct, 'comv_val':baseVal2*comvPct/100,
+      gopvPct, 'gopv_val':baseVal2*gopvPct/100,
+      semvPct, 'semv_val':(liqRows[0]?.total||0)*semvPct/100,
+      ibvPct,  'ibv_val':(liqRows[0]?.total||0)*ibvPct/100,
+      ganvMni:getNum('go-ganv-mni'), ganvPct:getNum('go-ganv-pct'), baseCalculo: baseCalculo2,
+      asnNetoV: asn-(baseVal2*comvPct/100)-(baseVal2*gopvPct/100),  // solo comision y gasto proc
+      ganv_val: Math.max(0,(liqRows[0]?.total||0)-getNum('go-ganv-mni'))*getNum('go-ganv-pct')/100,
+      comcPct, 'comc_val':baseVal2*comcPct/100,
+      gopcPct, 'gopc_val':baseVal2*gopcPct/100,
+      ivacPct, 'ivac_val':montoLiq*ivacPct/100,
+      ivaliqPct, 'ivaliq_val':montoLiq*ivaliqPct/100,
+      asnNetoC: montoLiq+(montoLiq*ivacPct/100)-(baseVal2*comcPct/100)-(baseVal2*gopcPct/100),
+      p1v:getNum('go-p1v'), p1c:getNum('go-p1c'),
+      obs:$('go-obs').value.trim()
+    };
+    if(!neg.vendedor&&!neg.comprador){alert('Ingresá vendedor o comprador.');return;}
+    const fbKey=await fbPush('negocios/gordos', neg);
+    if(fbKey){neg._fbKey=fbKey; db.gordos.push(neg);}
+    cerrarModal('gordo');
+    // reset
+    $('go-vendedor').value=''; $('go-comprador').value=''; $('go-cab').value='';
+    $('go-kgb').value=''; $('go-obs').value=''; $('go-frigorifico').value='';
+    $('go-fecha').value=today();
+    $('go-faena-tbody').innerHTML=''; $('go-liq-tbody').innerHTML='';
+    renderTabla('gordo'); renderResumen(); return;
+  } else if(tipo==='invernada'){
+    kgb=getNum('in-kgb'); const dsb=getNum('in-dsb');
+    kgn=kgb*(1-dsb/100); kgprom=cab>0?kgn/cab:0;
+    pb=getNum('in-pb'); pesob=getNum('in-pesob');
+    pesot=getNum('in-pesot'); dscto=getNum('in-dscto');
+    sobrepeso=Math.max(0,Math.min(kgprom,pesot)-pesob);
+    pf=pb-sobrepeso*dscto;
+    // cat2
+    const cat2visible=$('in-cat2-wrap')?.style.display!=='none';
+    const cab2=cat2visible?getNum('in-cab2'):0;
+    const kgb2=cat2visible?getNum('in-kgb2'):0;
+    const dsb2=cat2visible?getNum('in-dsb2'):0;
+    const kgn2=kgb2*(1-dsb2/100);
+    const kgprom2=cab2>0?kgn2/cab2:0;
+    const pb2=cat2visible?getNum('in-pb2'):0;
+    const pesob2=cat2visible?getNum('in-pesob2'):200;
+    const pesot2=cat2visible?getNum('in-pesot2'):250;
+    const dscto2=cat2visible?getNum('in-dscto2'):0;
+    const sobrepeso2=Math.max(0,Math.min(kgprom2,pesot2)-pesob2);
+    const pf2=pb2-sobrepeso2*dscto2;
+    const total1=kgn*pf;
+    const total2=kgn2*pf2;
+    total=total1+total2;
+    const cabTotal=getNum('in-cab')+(cat2visible?cab2:0);
+    // store extra cat fields in neg
+    Object.assign(neg_extra={},{
+      cat2:cat2visible?$('in-cat2')?.value:'',
+      cab2:cat2visible?cab2:0, kgb2:cat2visible?kgb2:0,
+      kgn2:Math.round(kgn2), kgprom2:Math.round(kgprom2),
+      pb2, pesob2, pesot2, dscto2, sobrepeso2, pf2, total1, total2,
+      hascat2:cat2visible, cabTotal
+    });
+  } else {
+    precio=getNum('vi-precio'); total=cab*precio;
+  }
+  // IVA comprador para invernada
+  const inIvacPct = tipo==='invernada' ? getNum('in-ivac') : 0;
+  const gastos=buildGastos(p,total);
+  // ASN para invernada
+  const pctLiqIn = tipo==='invernada' ? getNum('in-pct-liq') : 100;
+  const montoLiqIn = total*pctLiqIn/100;
+  const asnIn = total-montoLiqIn;
+  // Liquidador (quien liquida)
+  const liquidadorSel = $(p+'-liquidador');
+  const liquidador = liquidadorSel?.value==='tercero'
+    ? ($(p+'-liq-ext')?.value.trim()||'Tercero')
+    : 'Ortiz y Cía.';
+  const neg={
+    id:Date.now(), tipo, fecha, estado:$(p+'-estado').value,
+    vendedor:$(p+'-vendedor').value.trim(),
+    comprador:$(p+'-comprador').value.trim(),
+    cat:$(p+'-cat')?.value||'',
+    liquidador,
+    cab: tipo==='invernada'&&neg_extra.cabTotal ? neg_extra.cabTotal : cab,
+    kgb, kgn:Math.round(kgn), kgprom:Math.round(kgprom),
+    pb, pesob, pesot, dscto, sobrepeso, pf, precio, total,
+    pctLiq: pctLiqIn, montoLiq: montoLiqIn, asn: asnIn,
+    ivacPct: inIvacPct, 'ivac_val': montoLiqIn*inIvacPct/100,
+    totalComprador: montoLiqIn + montoLiqIn*inIvacPct/100 - total*(getNum(p+'-comc')||0)/100 - total*(getNum(p+'-gopc')||0)/100,
+    p1v:getNum(p+'-p1v'), p2v:getNum(p+'-p2v'),
+    p1c:getNum(p+'-p1c'), p2c:getNum(p+'-p2c'),
+    obs:$(p+'-obs').value.trim(),
+    ...gastos,
+    ...neg_extra
+  };
+  if(!neg.vendedor&&!neg.comprador){alert('Ingresá vendedor o comprador.');return;}
+  const arr=tipo==='gordo'?'gordos':tipo==='invernada'?'invernadas':'vientres';
+
+  const fbKey = await fbPush(`negocios/${arr}`, neg);
+  if(fbKey){ neg._fbKey = fbKey; db[arr].push(neg); }
+
+  cerrarModal(tipo==='vientre'?'vientre':tipo);
+  ['vendedor','comprador','cab','kgb','obs','precio','pb'].forEach(f=>{const el=$(p+'-'+f);if(el)el.value='';});
+  if(tipo==='invernada'){ ['cab2','kgb2','pb2'].forEach(f=>{const el=$('in-'+f);if(el)el.value='';}); const w=$('in-cat2-wrap');if(w){w.style.display='none';} const b=$('btn-cat2');if(b)b.textContent='+ Agregar cat. 2'; }
+  const pfInput=$(p+'-pf-input'); if(pfInput) pfInput.value='';
+  $(p+'-fecha').value=today();
+  renderTabla(tipo==='vientre'?'vientre':tipo);
+  renderResumen();
+}
+
+// ── ESTADO ────────────────────────────────────────
+async function setEstado(arr, fbKey, val){
+  const n=db[arr].find(x=>(x._fbKey||x.id.toString())===fbKey.toString());
+  if(!n) return;
+  n.estado=val;
+  setSyncBadge('syncing');
+  try{
+    await set(ref(rtdb,`negocios/${arr}/${fbKey}/estado`),val);
+    setSyncBadge('ok');
+  } catch(e){ setSyncBadge('error'); }
+  const tipoMap={gordos:'gordo',invernadas:'invernada',vientres:'vientre'};
+  renderTabla(tipoMap[arr]);
+  renderLiqExternas();
+  renderResumen();
+}
+
+// ── LIQ EXTERNAS ──────────────────────────────────
+function renderLiqExternas(){
+  const q=($('q-liq-ext')?.value||'').toLowerCase();
+  const ft=$('filt-liq-ext')?.value||'';
+  const tbody=$('tbody-liq-ext'); if(!tbody)return;
+  const todos=getAllNegs();
+  let data=todos.filter(n=>{
+    const tipo=n._arr==='gordos'?'Gordo':n._arr==='invernadas'?'Invernada':'Vientres';
+    const mq=!q||[n.vendedor,n.comprador,n.liquidador||''].join(' ').toLowerCase().includes(q);
+    const mt=!ft||tipo===ft;
+    return mq&&mt;
+  });
+  if(!data.length){
+    tbody.innerHTML=`<tr><td colspan="10" style="text-align:center;padding:2.5rem;color:var(--gris)">Sin registros</td></tr>`;
+    return;
+  }
+  const ESTADOS=['En curso','Pendiente','Cerrado','Finalizado','Cancelado'];
+  tbody.innerHTML=data.map((n,i)=>{
+    const tipo=n._arr==='gordos'?'Gordo':n._arr==='invernadas'?'Invernada':'Vientres';
+    const arr=n._arr; const fbk=n._fbKey||n.id;
+    const liquidador=n.liquidador||'Ortiz y Cía.';
+    const liqBadge=liquidador==='Ortiz y Cía.'
+      ?`<span style="font-size:11px;color:var(--verde-mid);font-weight:600">Ortiz y Cía.</span>`
+      :`<span style="font-size:11px;color:var(--amber);font-weight:600">${liquidador}</span>`;
+    const estOpts=ESTADOS.map(e=>`<option value="${e}" ${n.estado===e?'selected':''}>${e}</option>`).join('');
+    return`<tr>
+      <td class="mono">${i+1}</td>
+      <td>${fd(n.fecha)}</td>
+      <td><span class="badge ${tipo==='Gordo'?'b-curso':tipo==='Invernada'?'b-pendiente':'b-cerrado'}" style="font-size:10px">${tipo}</span></td>
+      <td>${n.vendedor||'—'}</td>
+      <td>${n.comprador||'—'}</td>
+      <td class="mono">${fmtI(n.cab)}</td>
+      <td class="mono" style="font-weight:600">$${fmt(n.total)}</td>
+      <td>${liqBadge}</td>
+      <td>
+        <select onchange="setEstado('${arr}','${fbk}',this.value)" style="padding:4px 8px;border:1px solid var(--gris-light);border-radius:var(--r);font-family:'Syne',sans-serif;font-size:12px;background:var(--blanco)">
+          ${estOpts}
+        </select>
+      </td>
+      <td><button class="btn btn-amber btn-sm" onclick="liqDirect(${n.id},'${arr}')">Ver liq.</button></td>
+    </tr>`;
+  }).join('');
+}
+
+// TABLA
+function bEst(e){const m={'Cerrado':'b-cerrado','En curso':'b-curso','Pendiente':'b-pendiente','Cancelado':'b-cancelado','Finalizado':'b-cerrado'};return`<span class="badge ${m[e]||'b-curso'}">${e}</span>`;}
+function renderTabla(tipo){
+  const arr=tipo==='gordo'?'gordos':tipo==='invernada'?'invernadas':'vientres';
+  const q=($('q-'+tipo)?.value||'').toLowerCase();
+  const est=$('est-'+tipo)?.value||'';
+  const tbody=$('tbody-'+tipo); if(!tbody)return;
+  let data=db[arr].filter(n=>{
+    const mq=!q||[n.vendedor,n.comprador,n.cat,n.obs].join(' ').toLowerCase().includes(q);
+    return mq&&(!est||n.estado===est);
+  });
+  if(!data.length){
+    const cols=tipo==='vientre'?12:13;
+    tbody.innerHTML=`<tr><td colspan="${cols}" style="text-align:center;padding:2.5rem;color:var(--gris)">Sin registros</td></tr>`;
+    return;
+  }
+  tbody.innerHTML=data.map(n=>{
+    const fbk=n._fbKey||n.id;
+    const arr2=tipo==='gordo'?'gordos':tipo==='invernada'?'invernadas':'vientres';
+    const ESTS=['En curso','Pendiente','Cerrado','Finalizado','Cancelado'];
+    const estOpts=ESTS.map(e=>`<option value="${e}" ${n.estado===e?'selected':''}>${e}</option>`).join('');
+    const estSel=`<select onchange="setEstado('${arr2}','${fbk}',this.value)" style="padding:4px 7px;border:1px solid var(--gris-light);border-radius:var(--r);font-family:'Syne',sans-serif;font-size:11px;background:var(--blanco)">${estOpts}</select>`;
+    const acc=`<button class="btn btn-amber btn-sm" onclick="liqDirect(${n.id},'${arr2}')">Liquidar</button>
+               <button class="btn btn-danger btn-sm" onclick="eliminar('${arr2}','${fbk}')">✕</button>`;
+    if(tipo==='vientre')return`<tr>
+      <td class="mono">${data.indexOf(n)+1}</td><td>${fd(n.fecha)}</td><td>${n.cat||'—'}</td>
+      <td>${n.vendedor||'—'}</td><td>${n.comprador||'—'}</td>
+      <td class="mono">${fmtI(n.cab)}</td><td class="mono">$${fmt(n.precio)}</td>
+      <td class="mono" style="font-weight:600">$${fmt(n.total)}</td>
+      <td class="mono" style="color:var(--verde-mid)">$${fmt(n['comv_val'])}</td>
+      <td class="mono" style="color:var(--azul)">$${fmt(n['comc_val'])}</td>
+      <td>${estSel}</td><td style="white-space:nowrap">${acc}</td></tr>`;
+    return`<tr>
+      <td class="mono">${data.indexOf(n)+1}</td><td>${fd(n.fecha)}</td>
+      <td>${n.vendedor||'—'}</td><td>${n.comprador||'—'}</td><td>${n.cat||'—'}</td>
+      <td class="mono">${fmtI(n.cab)}</td>
+      <td class="mono">${n.kgprom?n.kgprom+' kg':'—'}</td>
+      <td class="mono">$${fmt(n.pf)}/kg</td>
+      <td class="mono" style="font-weight:600">$${fmt(n.total)}</td>
+      <td class="mono" style="color:var(--verde-mid)">$${fmt(n['comv_val'])}</td>
+      <td class="mono" style="color:var(--azul)">$${fmt(n['comc_val'])}</td>
+      <td>${estSel}</td><td style="white-space:nowrap">${acc}</td></tr>`;
+  }).join('');
+}
+
+async function eliminar(arr, fbKey){
+  if(!confirm('¿Eliminar este negocio?'))return;
+  await fbDelete(`negocios/${arr}/${fbKey}`);
+  db[arr]=db[arr].filter(n=>(n._fbKey||n.id.toString())!==fbKey.toString());
+  const m={gordos:'gordo',invernadas:'invernada',vientres:'vientre'};
+  renderTabla(m[arr]); renderResumen();
+}
+
+// RESUMEN
+function renderResumen(){
+  const todos=[...db.gordos,...db.invernadas,...db.vientres];
+  const monto=todos.reduce((a,n)=>a+(n.total||0),0);
+  const com=todos.reduce((a,n)=>a+(n['comv_val']||0)+(n['comc_val']||0),0);
+  $('stats-resumen').innerHTML=`
+    <div class="stat-card acc"><div class="stat-lbl">Total negocios</div><div class="stat-val">${todos.length}</div>
+      <div class="stat-sub">${todos.filter(n=>n.estado==='Cerrado').length} cerrados · ${todos.filter(n=>n.estado==='En curso').length} en curso</div></div>
+    <div class="stat-card"><div class="stat-lbl">Monto total operado</div><div class="stat-val" style="font-size:17px">$${fmtI(Math.round(monto))}</div></div>
+    <div class="stat-card"><div class="stat-lbl">Comisiones totales</div><div class="stat-val" style="font-size:17px;color:var(--verde-mid)">$${fmtI(Math.round(com))}</div></div>
+    <div class="stat-card"><div class="stat-lbl">Cabezas totales</div><div class="stat-val">${fmtI(todos.reduce((a,n)=>a+(parseInt(n.cab)||0),0))}</div></div>`;
+  const secs=[{key:'gordos',lbl:'Gordos',cls:'gordo'},{key:'invernadas',lbl:'Invernada',cls:'invernada'},{key:'vientres',lbl:'Vientres',cls:'vientre'}];
+  $('res-grid').innerHTML=secs.map(s=>{
+    const a=db[s.key];
+    const m=a.reduce((x,n)=>x+(n.total||0),0);
+    const c=a.reduce((x,n)=>x+(n['comv_val']||0)+(n['comc_val']||0),0);
+    return`<div class="res-card"><div class="res-head ${s.cls}"><span>${s.lbl}</span><span style="font-size:12px;opacity:.7">${a.length} neg.</span></div>
+      <div class="res-body">
+        <div class="res-row"><span>Cabezas</span><strong>${fmtI(a.reduce((x,n)=>x+(parseInt(n.cab)||0),0))}</strong></div>
+        <div class="res-row"><span>Cerrados</span><strong>${a.filter(n=>n.estado==='Cerrado').length}</strong></div>
+        <div class="res-row"><span>En curso</span><strong>${a.filter(n=>n.estado==='En curso').length}</strong></div>
+        <div class="res-row"><span>Monto total</span><strong>$${fmtI(Math.round(m))}</strong></div>
+        <div class="res-row"><span>Comisiones</span><strong style="color:var(--verde-mid)">$${fmtI(Math.round(c))}</strong></div>
+      </div></div>`;
+  }).join('');
+}
+
+// LIQUIDACIÓN
+function getAllNegs(){
+  return[...db.gordos.map(n=>({...n,_arr:'gordos'})),...db.invernadas.map(n=>({...n,_arr:'invernadas'})),...db.vientres.map(n=>({...n,_arr:'vientres'}))];
+}
+function poblarLiq(){
+  const all=getAllNegs();
+  ['liq-sel-v','liq-sel-c'].forEach(sid=>{
+    const sel=$(sid); if(!sel)return;
+    sel.innerHTML='<option value="">— Seleccionar negocio —</option>'+all.map(n=>{
+      const tl=n._arr==='gordos'?'Gordo':n._arr==='invernadas'?'Invernada':'Vientre';
+      return`<option value="${n.id}">[${tl}] ${fd(n.fecha)} · ${n.vendedor||'—'} → ${n.comprador||'—'}</option>`;
+    }).join('');
+  });
+}
+function switchLiqTab(id,btn){
+  document.querySelectorAll('.liq-page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tipo-tab').forEach(t=>t.classList.remove('active'));
+  $('liq-'+id).classList.add('active'); btn.classList.add('active');
+}
+function renderLiq(dest){
+  const selId=dest==='vendedor'?'liq-sel-v':'liq-sel-c';
+  const contId=dest==='vendedor'?'liq-content-v':'liq-content-c';
+  const id=parseInt($(selId)?.value);
+  const cont=$(contId); if(!cont)return;
+  if(!id){cont.innerHTML='';return;}
+  const n=getAllNegs().find(x=>x.id===id);
+  if(!n){cont.innerHTML='';return;}
+  const tl=n._arr==='gordos'?'Gordo':n._arr==='invernadas'?'Invernada':'Vientre';
+  const tc=n._arr==='gordos'?'#1a3a2a':n._arr==='invernadas'?'#1a3a5c':'#4a1a3a';
+  const tt=n._arr==='gordos'?'#a8d5b8':n._arr==='invernadas'?'#a8c8e8':'#e8a8d0';
+  const esV=dest==='vendedor';
+  const gKeys=esV?['comv','gopv','regv','semv','ganv']:['comc','gopc','regc','semc','ganc'];
+  const gLabels=['Comisión','Gastos operativos','Der. de Registro','Semoviente','Imp. Ganancias'];
+  const totalGastos=gKeys.reduce((a,k)=>a+(n[k+'_val']||0),0);
+  // Para invernada comprador: neto = liquidado + IVA - gastos
+  const ivacValIn = (!esV && n._arr==='invernadas') ? (n['ivac_val']||0) : 0;
+  const neto=esV
+    ?(n.total-totalGastos)
+    :n._arr==='invernadas'
+      ?(n.montoLiq||n.total)+(ivacValIn)-totalGastos
+      :(n.total+totalGastos);
+  function gastosRows(keys){
+    const rows = keys.map((k,i)=>{
+      const pct=n[k+'Pct']||0; const val=n[k+'_val']||0;
+      if(!pct&&!val)return'';
+      return`<tr><td class="lbl">${gLabels[i]}<span style="color:var(--gris);font-size:11px;margin-left:4px">(${pct}%)</span></td>
+             <td class="val neg">- $${fmt(val)}</td></tr>`;
+    }).filter(Boolean).join('');
+    // Add IVA row for invernada comprador
+    if(!esV && n._arr==='invernadas' && ivacValIn){
+      return rows + `<tr><td class="lbl">IVA (${n.ivacPct||10.5}% s/liquidado)</td><td class="val"> + $${fmt(ivacValIn)}</td></tr>`;
+    }
+    return rows;
+  }
+  let detalleHacienda='';
+  if(n._arr==='gordos'){
+    // Liquidación especial para faena
+    const esV=dest==='vendedor';
+    const tc='#1a3a2a'; const tt='#a8d5b8';
+    const faenaTbl=(n.faenaRows||[]).map(r=>`
+      <tr><td>${r.clasificacion}</td><td>${r.cab||'—'}</td><td>${fmtI(r.kg)} kg</td><td>$${fmt(r.precioKg)}</td><td>$${fmt(r.total)}</td></tr>`).join('');
+    const liqTbl=(n.liqRows||[]).map(r=>`
+      <tr><td>${r.cat}</td><td>${r.cant}</td><td>${fmtI(r.kg)} kg</td><td>${r.kgCab} kg/cab</td><td>$${fmt(r.precio)}</td><td>$${fmt(r.total)}</td></tr>`).join('');
+    const baseLabel=n.baseCalculo==='total'?'total faena':'ASN';
+    const gastosASN_V=[
+      {lbl:`Comisión (${n.comvPct}% s/${baseLabel})`,val:n['comv_val']},
+      {lbl:`Gasto procesamiento (${n.gopvPct}% s/${baseLabel})`,val:n['gopv_val']},
+    ].filter(g=>g.val).map(g=>`
+      <tr><td class="lbl">${g.lbl}</td><td class="val neg">- $${fmt(g.val)}</td></tr>`).join('');
+    const impuestosV=[
+      {lbl:`Imp. Semoviente (${n.semvPct}% s/fila 1 liq.)`,val:n['semv_val']},
+      {lbl:`Ing. Brutos (${n.ibvPct}% s/fila 1 liq.)`,val:n['ibv_val']},
+      {lbl:`Imp. Ganancias (${n.ganvPct}% s/excedente $${n.ganvMni?fmtI(n.ganvMni):'0'})`,val:n.ganv_val||n.ganvFijo},
+    ].filter(g=>g.val).map(g=>`
+      <tr><td class="lbl">${g.lbl}</td><td class="val neg">- $${fmt(g.val)}</td></tr>`).join('');
+    const gastosC=[
+      {lbl:`Comisión (${n.comcPct}% s/${baseLabel})`,val:n['comc_val'],neg:true},
+      {lbl:`Gasto proc. (${n.gopcPct}% s/${baseLabel})`,val:n['gopc_val'],neg:true},
+      {lbl:`IVA (${n.ivacPct}% s/liquidado)`,val:n['ivac_val'],neg:false},
+    ].filter(g=>g.val).map(g=>`
+      <tr><td class="lbl">${g.lbl}</td><td class="val ${g.neg?'neg':''}">${g.neg?'- ':''} $${fmt(g.val)}</td></tr>`).join('');
+    cont.innerHTML=`
+    <div class="liq-doc">
+      <div class="liq-top">
+        <div>
+          <div class="liq-empresa-nm">Ortiz y Cía. Consignatarios</div>
+          <div class="liq-empresa-sub">Liquidación Faena — ${esV?'Vendedor':'Comprador'} &nbsp;·&nbsp; @ortiz.consignatarios</div>
+        </div>
+        <div class="liq-num-box">
+          <div><span class="liq-tipo-badge" style="background:${tc};color:${tt}">Gordo</span></div>
+          <div class="liq-id">#${String(n.id).slice(-6)}</div>
+          <div class="liq-fecha">${fd(n.fecha)}</div>
+        </div>
+      </div>
+      ${n.liquidador&&n.liquidador!=='Ortiz y Cía.'?`<div style="background:var(--amber-pale);border:1px solid #f5d898;border-radius:6px;padding:.6rem 1rem;margin-bottom:1rem;font-size:12.5px;color:var(--amber)"><strong>Liquida:</strong> ${n.liquidador}</div>`:''}
+      <div class="liq-cols">
+        <div>
+          <div class="liq-sec-title">Remitente (Vendedor)</div>
+          <div class="liq-row"><span class="lbl">Nombre</span><span class="val">${n.vendedor||'—'}</span></div>
+          ${n.p1v?`<div class="liq-row"><span class="lbl">Plazo (${n.p1v} días)</span><span class="val">${addDays(n.fecha,n.p1v)}</span></div>`:''}
+        </div>
+        <div>
+          <div class="liq-sec-title">Comprador</div>
+          <div class="liq-row"><span class="lbl">Nombre</span><span class="val">${n.comprador||'—'}</span></div>
+          ${n.p1c?`<div class="liq-row"><span class="lbl">Plazo (${n.p1c} días)</span><span class="val">${addDays(n.fecha,n.p1c)}</span></div>`:''}
+        </div>
+      </div>
+      ${n.frigorifico?`<div class="liq-section" style="margin-bottom:1rem"><div class="liq-sec-title">Frigorífico</div><div class="liq-row"><span class="lbl">Nombre</span><span class="val">${n.frigorifico}</span></div></div>`:''}
+      <div class="liq-hacienda">
+        <div class="liq-sec-title">Hacienda</div>
+        <div class="liq-row"><span class="lbl">Categoría</span><span class="val">${n.cat}</span></div>
+        <div class="liq-row"><span class="lbl">Cabezas</span><span class="val">${fmtI(n.cab)}</span></div>
+        <div class="liq-row"><span class="lbl">Kg vivos netos</span><span class="val">${fmtI(n.kgn)} kg</span></div>
+        <div class="liq-row"><span class="lbl">Kg vivos prom/cab</span><span class="val">${fmtI(n.kgprom)} kg</span></div>
+        <div class="liq-row"><span class="lbl">Kg carne total</span><span class="val">${fmtI(n.totalKgCarne)} kg</span></div>
+        <div class="liq-row"><span class="lbl">Rinde</span><span class="val">${n.rinde?(n.rinde*100).toFixed(2)+'%':'—'}</span></div>
+      </div>
+      ${faenaTbl?`<div class="liq-hacienda">
+        <div class="liq-sec-title">Detalle de faena</div>
+        <table class="liq-tbl"><thead><tr><th>Clasificación</th><th>Cab.</th><th>Kg carne</th><th>$/kg</th><th>Total</th></tr></thead>
+        <tbody>${faenaTbl}</tbody>
+        <tfoot><tr style="font-weight:600;background:var(--crema)"><td colspan="2"></td><td>${fmtI(n.totalKgCarne)} kg</td><td></td><td>$${fmt(n.total)}</td></tr></tfoot>
+        </table></div>`:''}
+      ${liqTbl?`<div class="liq-hacienda">
+        <div class="liq-sec-title">Liquidación de hacienda</div>
+        <table class="liq-tbl"><thead><tr><th>Categoría</th><th>Cant.</th><th>Kg</th><th>Kg/cab</th><th>$/kg</th><th>Total</th></tr></thead>
+        <tbody>${liqTbl}</tbody></table>
+        <div style="margin-top:.75rem">
+          <div class="liq-row"><span class="lbl">Total a liquidar (${n.pctLiq}%)</span><span class="val">$${fmt(n.montoLiq)}</span></div>
+          <div class="liq-row"><span class="lbl">ASN (${(100-n.pctLiq).toFixed(1)}%)</span><span class="val">$${fmt(n.asn)}</span></div>
+        </div></div>`:''}
+      <div class="liq-gastos-grid">
+        <div>
+          ${esV ? `
+          <div class="liq-sec-title">Descuentos sobre ASN — Vendedor</div>
+          <table class="liq-gastos-tbl">
+            <tr><td class="lbl">ASN bruto</td><td class="val">$${fmt(n.asn)}</td></tr>
+            ${gastosASN_V}
+            <tr style="border-top:1px solid var(--crema-dark)">
+              <td class="lbl" style="font-weight:600;padding-top:8px">ASN neto</td>
+              <td class="val" style="padding-top:8px;color:var(--verde-mid)">$${fmt(n.asnNetoV)}</td>
+            </tr>
+          </table>
+          ${impuestosV ? `<div style="margin-top:1rem">
+            <div class="liq-sec-title">Impuestos s/liquidado (ref.)</div>
+            <table class="liq-gastos-tbl">${impuestosV}</table>
+          </div>` : ''}
+          ` : `
+          <div class="liq-sec-title">Gastos — Comprador</div>
+          <table class="liq-gastos-tbl">
+            <tr><td class="lbl">A liquidar</td><td class="val">$${fmt(n.montoLiq)}</td></tr>
+            ${gastosC}
+            <tr style="border-top:1px solid var(--crema-dark)">
+              <td class="lbl" style="font-weight:600;padding-top:8px">Total a pagar</td>
+              <td class="val" style="padding-top:8px;color:var(--azul)">$${fmt(n.asnNetoC)}</td>
+            </tr>
+          </table>
+          `}
+        </div>
+        <div>
+          <div class="liq-sec-title">Resumen</div>
+          <div style="font-size:13px;color:var(--gris);margin-bottom:6px">Total faena</div>
+          <div style="font-size:15px;font-family:'IBM Plex Mono',monospace;font-weight:600;margin-bottom:.75rem">$${fmt(n.total)}</div>
+          <div style="font-size:13px;color:var(--gris);margin-bottom:6px">A liquidar (${n.pctLiq}%)</div>
+          <div style="font-size:15px;font-family:'IBM Plex Mono',monospace;font-weight:600;margin-bottom:.75rem">$${fmt(n.montoLiq)}</div>
+          <div style="font-size:13px;color:var(--gris);margin-bottom:6px">ASN (${(100-n.pctLiq).toFixed(1)}%)</div>
+          <div style="font-size:15px;font-family:'IBM Plex Mono',monospace;font-weight:600">$${fmt(n.asn)}</div>
+        </div>
+      </div>
+      <div class="liq-netos">
+        <div class="liq-neto-box">
+          <div class="liq-neto-lbl">${esV?'ASN neto vendedor':'Total a pagar comprador'}</div>
+          <div class="liq-neto-val">$${fmt(esV?n.asnNetoV:n.asnNetoC)}</div>
+          <div class="liq-neto-quien">${esV?n.vendedor:n.comprador}</div>
+        </div>
+        <div style="display:flex;align-items:center;padding:.75rem 1rem;background:var(--crema);border-radius:6px;font-size:12px;color:var(--gris)">
+          ${n.obs?`<div><strong style="display:block;margin-bottom:4px;font-size:11px;text-transform:uppercase;letter-spacing:.08em">Observaciones</strong>${n.obs}</div>`:'<span>Sin observaciones adicionales.</span>'}
+        </div>
+      </div>
+      <div style="margin-top:1.75rem;padding-top:1rem;border-top:1px solid var(--crema-dark);display:flex;justify-content:space-between;font-size:11.5px;color:var(--gris);font-family:'IBM Plex Mono',monospace">
+        <span>Generado el ${new Date().toLocaleDateString('es-AR')}</span>
+        <span>ID ${n.id}</span>
+      </div>
+    </div>`;
+    return;
+  } else if(n._arr==='invernadas'){
+    detalleHacienda=`
+      <div class="liq-row"><span class="lbl">Kg brutos totales</span><span class="val">${fmtI(n.kgb)} kg</span></div>
+      ${n.kgn!==n.kgb?`<div class="liq-row"><span class="lbl">Kg netos (desbaste)</span><span class="val">${fmtI(n.kgn)} kg</span></div>`:''}
+      <div class="liq-row"><span class="lbl">Kg promedio neto</span><span class="val">${n.kgprom} kg/cab</span></div>
+      ${n.sobrepeso>0?`<div class="liq-row"><span class="lbl">Precio base</span><span class="val">$${fmt(n.pb)}/kg</span></div>
+      <div class="liq-row"><span class="lbl">Exceso peso (dscto. $${n.dscto}/kg × ${n.sobrepeso.toFixed?n.sobrepeso.toFixed(1):n.sobrepeso} kg)</span><span class="val" style="color:var(--rojo)">-$${fmt(n.sobrepeso*n.dscto)}/kg</span></div>
+      <div class="liq-row"><span class="lbl">Precio final</span><span class="val">$${fmt(n.pf)}/kg</span></div>`
+      :`<div class="liq-row"><span class="lbl">Precio</span><span class="val">$${fmt(n.pf)}/kg</span></div>`}`;
+  } else {
+    detalleHacienda=`<div class="liq-row"><span class="lbl">Precio por cabeza</span><span class="val">$${fmt(n.precio)}</span></div>`;
+  }
+  const pl1=esV?n.p1v:n.p1c; const pl2=esV?n.p2v:n.p2c;
+  cont.innerHTML=`
+  <div class="liq-doc">
+    <div class="liq-top">
+      <div>
+        <div class="liq-empresa-nm">Ortiz y Cía. Consignatarios</div>
+        <div class="liq-empresa-sub">Liquidación ${esV?'al Vendedor':'al Comprador'} &nbsp;·&nbsp; @ortiz.consignatarios</div>
+      </div>
+      <div class="liq-num-box">
+        <div><span class="liq-tipo-badge" style="background:${tc};color:${tt}">${tl}</span></div>
+        <div class="liq-id">#${String(n.id).slice(-6)}</div>
+        <div class="liq-fecha">${fd(n.fecha)}</div>
+      </div>
+    </div>
+    ${n.liquidador&&n.liquidador!=='Ortiz y Cía.'?`<div style="background:var(--amber-pale);border:1px solid #f5d898;border-radius:6px;padding:.6rem 1rem;margin-bottom:1rem;font-size:12.5px;color:var(--amber)"><strong>Liquida:</strong> ${n.liquidador}</div>`:''}
+    <div class="liq-cols">
+      <div>
+        <div class="liq-sec-title">Vendedor</div>
+        <div class="liq-row"><span class="lbl">Nombre</span><span class="val">${n.vendedor||'—'}</span></div>
+        ${n.p1v?`<div class="liq-row"><span class="lbl">Plazo 1 (${n.p1v} días)</span><span class="val">${addDays(n.fecha,n.p1v)}</span></div>`:''}
+        ${n.p2v?`<div class="liq-row"><span class="lbl">Plazo 2 (${n.p2v} días)</span><span class="val">${addDays(n.fecha,n.p2v)}</span></div>`:''}
+      </div>
+      <div>
+        <div class="liq-sec-title">Comprador</div>
+        <div class="liq-row"><span class="lbl">Nombre</span><span class="val">${n.comprador||'—'}</span></div>
+        ${n.p1c?`<div class="liq-row"><span class="lbl">Plazo 1 (${n.p1c} días)</span><span class="val">${addDays(n.fecha,n.p1c)}</span></div>`:''}
+        ${n.p2c?`<div class="liq-row"><span class="lbl">Plazo 2 (${n.p2c} días)</span><span class="val">${addDays(n.fecha,n.p2c)}</span></div>`:''}
+      </div>
+    </div>
+    <div class="liq-hacienda">
+      <div class="liq-sec-title">Detalle de la operación</div>
+      <table class="liq-tbl">
+        <thead><tr><th>Categoría</th><th>Cabezas</th><th>Total bruto</th></tr></thead>
+        <tbody><tr><td>${n.cat||tl}</td><td>${fmtI(n.cab)}</td><td>$${fmt(n.total)}</td></tr></tbody>
+      </table>
+      <div style="margin-top:.75rem">${detalleHacienda}</div>
+      ${n._arr==='invernadas'&&n.pctLiq&&n.pctLiq<100?`
+      <div style="margin-top:.75rem;padding:.75rem;background:var(--crema);border-radius:6px">
+        <div class="liq-row"><span class="lbl">A liquidar (${n.pctLiq}%)</span><span class="val">$${fmt(n.montoLiq)}</span></div>
+        <div class="liq-row"><span class="lbl">ASN (${(100-(n.pctLiq||0)).toFixed(1)}%)</span><span class="val">$${fmt(n.asn)}</span></div>
+      </div>`:''}
+    </div>
+    <div class="liq-gastos-grid">
+      <div>
+        <div class="liq-sec-title">Gastos ${esV?'vendedor':'comprador'}</div>
+        <table class="liq-gastos-tbl">
+          ${gastosRows(gKeys)}
+          <tr style="border-top:1px solid var(--crema-dark)">
+            <td class="lbl" style="font-weight:600;padding-top:8px">Total gastos</td>
+            <td class="val neg" style="padding-top:8px">- $${fmt(totalGastos)}</td>
+          </tr>
+        </table>
+      </div>
+      <div>
+        <div class="liq-sec-title">Importe bruto</div>
+        <div style="font-size:15px;font-family:'IBM Plex Mono',monospace;font-weight:600;margin-bottom:.5rem">$${fmt(n.total)}</div>
+        <div class="liq-sec-title" style="margin-top:.5rem">Gastos deducidos</div>
+        <div style="font-size:15px;font-family:'IBM Plex Mono',monospace;color:var(--rojo)">- $${fmt(totalGastos)}</div>
+      </div>
+    </div>
+    <div class="liq-netos">
+      <div class="liq-neto-box">
+        <div class="liq-neto-lbl">${esV?'Neto a recibir':n._arr==='invernadas'?'Total a pagar':'Total a pagar'}</div>
+        <div class="liq-neto-val">$${fmt(neto)}</div>
+        <div class="liq-neto-quien">${esV?n.vendedor:n.comprador}</div>
+      </div>
+      <div style="display:flex;align-items:center;padding:.75rem 1rem;background:var(--crema);border-radius:6px;font-size:12px;color:var(--gris)">
+        ${n.obs?`<div><strong style="display:block;margin-bottom:4px;font-size:11px;text-transform:uppercase;letter-spacing:.08em">Observaciones</strong>${n.obs}</div>`:'<span>Sin observaciones adicionales.</span>'}
+      </div>
+    </div>
+    <div style="margin-top:1.75rem;padding-top:1rem;border-top:1px solid var(--crema-dark);display:flex;justify-content:space-between;font-size:11.5px;color:var(--gris);font-family:'IBM Plex Mono',monospace">
+      <span>Generado el ${new Date().toLocaleDateString('es-AR')}</span>
+      <span>ID ${n.id}</span>
+    </div>
+  </div>`;
+}
+
+function liqDirect(id,arr){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  $('page-liquidaciones').classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(el=>{if(el.textContent.includes('Liquidaciones'))el.classList.add('active');});
+  $('topbar-title').textContent='Liquidaciones';
+  poblarLiq();
+  $('liq-sel-v').value=id; $('liq-sel-c').value=id;
+  renderLiq('vendedor'); renderLiq('comprador');
+}
+
+// ── RESUMEN MENSUAL ───────────────────────────────
+let rmChart = null;
+function renderResumenMensual(){
+  const todos = getAllNegs();
+  if(!todos.length){ 
+    $('rm-tbody').innerHTML = '<tr><td colspan="10" style="text-align:center;padding:2.5rem;color:var(--gris)">Sin registros aún</td></tr>';
+    return;
+  }
+
+  // Poblar selector de año
+  const anios = [...new Set(todos.map(n=>n.fecha?.split('-')[0]).filter(Boolean))].sort().reverse();
+  const selAnio = $('rm-anio');
+  const anioActual = selAnio.value || anios[0];
+  if(!selAnio.innerHTML || selAnio.options.length !== anios.length){
+    selAnio.innerHTML = anios.map(a=>`<option value="${a}" ${a===anioActual?'selected':''}>${a}</option>`).join('');
+  }
+  const anioFiltro = selAnio.value || anios[0];
+
+  const meses = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+
+  // Agrupar por mes
+  const porMes = {};
+  for(let i=1;i<=12;i++) porMes[i] = {gordos:0,invernadas:0,vientres:0,negocios:0,cabezas:0,monto:0,comV:0,comC:0};
+
+  todos.forEach(n=>{
+    if(!n.fecha) return;
+    const [y,m] = n.fecha.split('-');
+    if(y !== anioFiltro) return;
+    const mes = parseInt(m);
+    const d = porMes[mes];
+    d.negocios++;
+    d.cabezas += parseInt(n.cab)||0;
+    d.monto += n.total||0;
+    if(n._arr==='gordos') d.gordos++;
+    if(n._arr==='invernadas') d.invernadas++;
+    if(n._arr==='vientres') d.vientres++;
+    // comisiones vendedor
+    d.comV += (n['comv_val']||0);
+    // comisiones comprador
+    d.comC += (n['comc_val']||0);
+  });
+
+  // Render tabla
+  const tbody = $('rm-tbody');
+  const tfoot = $('rm-tfoot');
+  let totNegocios=0,totCab=0,totMonto=0,totComV=0,totComC=0,totG=0,totI=0,totV=0;
+  const filas = [];
+  for(let i=1;i<=12;i++){
+    const d=porMes[i];
+    if(d.negocios===0) continue;
+    totNegocios+=d.negocios; totCab+=d.cabezas; totMonto+=d.monto;
+    totComV+=d.comV; totComC+=d.comC; totG+=d.gordos; totI+=d.invernadas; totV+=d.vientres;
+    filas.push(`<tr>
+      <td style="font-weight:600">${meses[i-1]}</td>
+      <td class="mono" style="color:var(--verde-mid)">${d.gordos||'—'}</td>
+      <td class="mono" style="color:var(--azul)">${d.invernadas||'—'}</td>
+      <td class="mono" style="color:#4a1a3a">${d.vientres||'—'}</td>
+      <td class="mono" style="font-weight:600">${d.negocios}</td>
+      <td class="mono">${fmtI(d.cabezas)}</td>
+      <td class="mono" style="font-weight:600">$${fmtI(Math.round(d.monto))}</td>
+      <td class="mono" style="color:var(--verde-mid)">$${fmtI(Math.round(d.comV))}</td>
+      <td class="mono" style="color:var(--azul)">$${fmtI(Math.round(d.comC))}</td>
+      <td class="mono" style="font-weight:700;color:var(--negro)">$${fmtI(Math.round(d.comV+d.comC))}</td>
+    </tr>`);
+  }
+  tbody.innerHTML = filas.length ? filas.join('') : '<tr><td colspan="10" style="text-align:center;padding:2rem;color:var(--gris)">Sin negocios en '+anioFiltro+'</td></tr>';
+  tfoot.innerHTML = `<tr style="background:var(--crema);font-weight:700">
+    <td>TOTAL ${anioFiltro}</td>
+    <td class="mono">${totG||'—'}</td><td class="mono">${totI||'—'}</td><td class="mono">${totV||'—'}</td>
+    <td class="mono">${totNegocios}</td>
+    <td class="mono">${fmtI(totCab)}</td>
+    <td class="mono">$${fmtI(Math.round(totMonto))}</td>
+    <td class="mono" style="color:var(--verde-mid)">$${fmtI(Math.round(totComV))}</td>
+    <td class="mono" style="color:var(--azul)">$${fmtI(Math.round(totComC))}</td>
+    <td class="mono" style="color:var(--negro)">$${fmtI(Math.round(totComV+totComC))}</td>
+  </tr>`;
+
+  // Render chart
+  const labels = [];
+  const dataMonto = [], dataComV = [], dataComC = [];
+  for(let i=1;i<=12;i++){
+    const d=porMes[i];
+    if(d.negocios===0) continue;
+    labels.push(meses[i-1].slice(0,3));
+    dataMonto.push(Math.round(d.monto));
+    dataComV.push(Math.round(d.comV));
+    dataComC.push(Math.round(d.comC));
+  }
+
+  const canvas = $('rm-chart');
+  if(rmChart){ rmChart.destroy(); rmChart=null; }
+  if(typeof Chart === 'undefined'){ 
+    $('rm-chart-wrap').innerHTML='<p style="text-align:center;color:var(--gris);padding:2rem">Cargando gráfico...</p>';
+    return; 
+  }
+  rmChart = new Chart(canvas, {
+    type:'bar',
+    data:{
+      labels,
+      datasets:[
+        {label:'Monto operado ($)',data:dataMonto,backgroundColor:'rgba(26,58,42,0.15)',borderColor:'#1a3a2a',borderWidth:1.5,yAxisID:'y'},
+        {label:'Com. Vendedor ($)',data:dataComV,backgroundColor:'rgba(45,92,63,0.7)',borderColor:'#2d5c3f',borderWidth:1,yAxisID:'y2'},
+        {label:'Com. Comprador ($)',data:dataComC,backgroundColor:'rgba(26,74,122,0.7)',borderColor:'#1a4a7a',borderWidth:1,yAxisID:'y2'},
+      ]
+    },
+    options:{
+      responsive:true,
+      interaction:{mode:'index',intersect:false},
+      plugins:{legend:{position:'top'},tooltip:{callbacks:{label:ctx=>`${ctx.dataset.label}: $${fmtI(ctx.raw)}`}}},
+      scales:{
+        y:{type:'linear',display:true,position:'left',ticks:{callback:v=>'$'+fmtI(v)},title:{display:true,text:'Monto operado'}},
+        y2:{type:'linear',display:true,position:'right',grid:{drawOnChartArea:false},ticks:{callback:v=>'$'+fmtI(v)},title:{display:true,text:'Comisiones'}}
+      }
+    }
+  });
+}
+window.navTo=navTo; window.abrirModal=abrirModal; window.cerrarModal=cerrarModal;
+window.calcG=calcG; window.calcI=calcI; window.calcV=calcV;
+window.addFilaFaena=addFilaFaena; window.addFilaLiq=addFilaLiq;
+window.guardar=guardar; window.eliminar=eliminar;
+window.renderTabla=renderTabla; window.renderLiq=renderLiq;
+window.switchLiqTab=switchLiqTab; window.poblarLiq=poblarLiq;
+window.liqDirect=liqDirect; window.toggleLiqExt=toggleLiqExt; window.setEstado=setEstado; window.renderLiqExternas=renderLiqExternas; window.renderResumenMensual=renderResumenMensual; window.toggleCat2=toggleCat2;
+
+// ── ARRANCAR ──────────────────────────────────────
+// initDB se llama desde onAuthStateChanged al hacer login
+</script>
+</body>
+</html>

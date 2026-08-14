@@ -76,6 +76,11 @@ tbody tr:hover{background:var(--crema)}
 .b-curso{background:var(--azul-pale);color:var(--azul)}
 .b-pendiente{background:var(--amber-pale);color:var(--amber)}
 .b-cancelado{background:var(--rojo-pale);color:var(--rojo)}
+.b-disponible{background:#d4edda;color:#1a5c30}
+.b-reservado{background:var(--amber-pale);color:var(--amber)}
+.b-vendido{background:var(--gris-light);color:var(--gris);text-decoration:line-through}
+tr.row-vendido{opacity:.5}
+tr.row-vendido td.tachado{text-decoration:line-through}
 .filters{display:flex;gap:10px;margin-bottom:1rem;flex-wrap:wrap}
 .filters input,.filters select{padding:7px 12px;border:1px solid var(--gris-light);border-radius:var(--r);font-family:'Syne',sans-serif;font-size:13px;background:var(--blanco);color:var(--negro);min-width:160px}
 .filters input:focus,.filters select:focus{outline:none;border-color:var(--verde-light)}
@@ -171,6 +176,11 @@ tbody tr:hover{background:var(--crema)}
     <div class="nav-item" onclick="navTo('gordos',this)">▲ &nbsp;Gordos</div>
     <div class="nav-item" onclick="navTo('invernada',this)">◇ &nbsp;Invernada</div>
     <div class="nav-item" onclick="navTo('vientres',this)">○ &nbsp;Vientres</div>
+  </div>
+  <div class="nav-sec">
+    <div class="nav-lbl">Mercado</div>
+    <div class="nav-item" onclick="navTo('lotes',this)">☰ &nbsp;Lotes disponibles</div>
+    <div class="nav-item" onclick="navTo('campos',this)">▦ &nbsp;Campos en venta</div>
   </div>
   <div class="nav-sec">
     <div class="nav-lbl">Gestión</div>
@@ -327,6 +337,50 @@ tbody tr:hover{background:var(--crema)}
           <th>Cab.</th><th>Total</th><th>Liquida</th><th>Estado</th><th></th>
         </tr></thead>
         <tbody id="tbody-liq-ext"></tbody>
+      </table></div>
+    </div>
+
+    <!-- PAGE: LOTES DISPONIBLES -->
+    <div id="page-lotes" class="page">
+      <div class="sec-header">
+        <div class="sec-title">Mercado — <span>Lotes disponibles</span></div>
+        <button class="btn btn-primary" onclick="abrirModal('lote')">+ Nuevo</button>
+      </div>
+      <div class="filters">
+        <input type="text" placeholder="Buscar..." id="q-lote" oninput="renderLotes()">
+        <select id="est-lote" onchange="renderLotes()">
+          <option value="">Todos los estados</option>
+          <option>Disponible</option><option>Reservado</option><option>Vendido</option>
+        </select>
+      </div>
+      <div class="tbl-wrap"><table>
+        <thead><tr>
+          <th>#</th><th>Fecha disp.</th><th>Tipo</th><th>Categoría</th><th>Cab.</th>
+          <th>Establecimiento</th><th>Zona/Prov.</th><th>Precio orient.</th><th>Estado</th><th></th>
+        </tr></thead>
+        <tbody id="tbody-lote"></tbody>
+      </table></div>
+    </div>
+
+    <!-- PAGE: CAMPOS EN VENTA -->
+    <div id="page-campos" class="page">
+      <div class="sec-header">
+        <div class="sec-title">Mercado — <span>Campos en venta</span></div>
+        <button class="btn btn-primary" onclick="abrirModal('campo')">+ Nuevo</button>
+      </div>
+      <div class="filters">
+        <input type="text" placeholder="Buscar..." id="q-campo" oninput="renderCampos()">
+        <select id="est-campo" onchange="renderCampos()">
+          <option value="">Todos los estados</option>
+          <option>Disponible</option><option>Reservado</option><option>Vendido</option>
+        </select>
+      </div>
+      <div class="tbl-wrap"><table>
+        <thead><tr>
+          <th>#</th><th>Denominación</th><th>Provincia/Partido</th><th>Ha</th>
+          <th>Tipo</th><th>Precio USD</th><th>USD/ha</th><th>Estado</th><th></th>
+        </tr></thead>
+        <tbody id="tbody-campo"></tbody>
       </table></div>
     </div>
 
@@ -619,6 +673,51 @@ tbody tr:hover{background:var(--crema)}
   </div>
 </div>
 
+<!-- MODAL LOTE -->
+<div class="modal-overlay" id="modal-lote">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title">Nuevo lote disponible</div><button class="modal-close" onclick="cerrarModal('lote')">×</button></div>
+    <div class="modal-body"><div class="fgrid">
+      <div class="fg"><label>Tipo de hacienda</label><select id="lo-tipo"><option>Faena</option><option>Invernada</option><option>Cría</option></select></div>
+      <div class="fg"><label>Categoría</label><input type="text" id="lo-cat" placeholder="Novillos, vacas, terneros..."></div>
+      <div class="fg"><label>Cabezas</label><input type="number" id="lo-cab" min="1" placeholder="0"></div>
+      <div class="fg"><label>Establecimiento / Procedencia</label><input type="text" id="lo-establecimiento" placeholder="Nombre del establecimiento"></div>
+      <div class="fg"><label>Zona / Provincia</label><input type="text" id="lo-zona" placeholder="Ej: Norte de Santa Fe"></div>
+      <div class="fg"><label>Precio orientativo</label><input type="text" id="lo-precio" placeholder="$/kg, $/cab, o dejar vacío = a consultar"></div>
+      <div class="fg"><label>Fecha de disponibilidad</label><input type="date" id="lo-fecha"></div>
+      <div class="fg"><label>Estado</label><select id="lo-estado"><option>Disponible</option><option>Reservado</option><option>Vendido</option></select></div>
+      <div class="fg full"><label>Observaciones</label><textarea id="lo-obs" placeholder="Sanidad, raza, condición, etc."></textarea></div>
+    </div></div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="cerrarModal('lote')">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarLote()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CAMPO -->
+<div class="modal-overlay" id="modal-campo">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title">Nuevo campo en venta</div><button class="modal-close" onclick="cerrarModal('campo')">×</button></div>
+    <div class="modal-body"><div class="fgrid">
+      <div class="fg"><label>Denominación</label><input type="text" id="ca-nombre" placeholder="Nombre del campo"></div>
+      <div class="fg"><label>Provincia</label><input type="text" id="ca-provincia" placeholder="Ej: Buenos Aires"></div>
+      <div class="fg"><label>Partido</label><input type="text" id="ca-partido" placeholder="Ej: Pergamino"></div>
+      <div class="fg"><label>Superficie (ha)</label><input type="number" id="ca-ha" placeholder="0" oninput="calcCampo()"></div>
+      <div class="fg"><label>Tipo de campo</label><select id="ca-tipo"><option>Agrícola</option><option>Ganadero</option><option>Mixto</option><option>Tambo</option></select></div>
+      <div class="fg"><label>Precio (USD)</label><input type="number" id="ca-precio" placeholder="0" oninput="calcCampo()"></div>
+      <div class="fg"><label>Precio por ha (calc.)</label><input type="text" id="ca-precio-ha" class="calc" readonly></div>
+      <div class="fg"><label>Estado</label><select id="ca-estado"><option>Disponible</option><option>Reservado</option><option>Vendido</option></select></div>
+      <div class="fg full"><label>Descripción general</label><textarea id="ca-desc" placeholder="Aguadas, mejoras, alambrados, aptitud, etc."></textarea></div>
+      <div class="fg full"><label>Observaciones</label><textarea id="ca-obs" placeholder="Observaciones adicionales"></textarea></div>
+    </div></div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="cerrarModal('campo')">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarCampo()">Guardar</button>
+    </div>
+  </div>
+</div>
+
 <script type="module">
 // ── FIREBASE SDK ──────────────────────────────────
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
@@ -731,7 +830,7 @@ onAuthStateChanged(auth, user => {
 const rtdb = getDatabase(app);
 
 // ── LOCAL DB (cache) ─────────────────────────────
-let db = { gordos:[], invernadas:[], vientres:[] };
+let db = { gordos:[], invernadas:[], vientres:[], lotes:[], campos:[] };
 
 // ── FIREBASE DB HELPERS (usan auth automaticamente) ──
 async function fbGet(path){
@@ -771,6 +870,8 @@ async function initDB(){
       db.gordos    = objToArr(data.gordos);
       db.invernadas= objToArr(data.invernadas);
       db.vientres  = objToArr(data.vientres);
+      db.lotes     = objToArr(data.lotes);
+      db.campos    = objToArr(data.campos);
     }
     setSyncBadge('ok');
   } catch(e){
@@ -811,11 +912,11 @@ function addDays(dateStr,days){
   const mes=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
   $('topbar-date').textContent=`${dias[d.getDay()]} ${d.getDate()} ${mes[d.getMonth()]} ${d.getFullYear()}`;
   $('sb-fecha').textContent=`${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()}`;
-  ['go-fecha','in-fecha','vi-fecha'].forEach(id=>{const el=$(id);if(el)el.value=today();});
+  ['go-fecha','in-fecha','vi-fecha','lo-fecha'].forEach(id=>{const el=$(id);if(el)el.value=today();});
 })();
 
 // NAV
-const TTLS={resumen:'Resumen general',gordos:'Gordos',invernada:'Invernada',vientres:'Vientres',liquidaciones:'Liquidaciones internas','liq-externas':'Liquidaciones externas','resumen-mensual':'Resumen mensual'};
+const TTLS={resumen:'Resumen general',gordos:'Gordos',invernada:'Invernada',vientres:'Vientres',liquidaciones:'Liquidaciones internas','liq-externas':'Liquidaciones externas','resumen-mensual':'Resumen mensual',lotes:'Lotes disponibles',campos:'Campos en venta'};
 function navTo(id,el){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
@@ -829,6 +930,8 @@ function navTo(id,el){
   if(id==='liquidaciones')poblarLiq();
   if(id==='liq-externas')renderLiqExternas();
   if(id==='resumen-mensual')renderResumenMensual();
+  if(id==='lotes')renderLotes();
+  if(id==='campos')renderCampos();
 }
 
 // MODAL
@@ -1870,6 +1973,153 @@ function renderResumenMensual(){
     }
   });
 }
+// ── MERCADO: LOTES DISPONIBLES ────────────────────
+function calcCampo(){
+  const ha=parseFloat($('ca-ha')?.value)||0;
+  const precio=parseFloat($('ca-precio')?.value)||0;
+  const precioHa=ha>0?precio/ha:0;
+  if($('ca-precio-ha'))$('ca-precio-ha').value=precioHa?'US$ '+fmt(precioHa):'';
+}
+function renderLotes(){
+  const q=($('q-lote')?.value||'').toLowerCase();
+  const est=$('est-lote')?.value||'';
+  const tbody=$('tbody-lote'); if(!tbody)return;
+  let data=db.lotes.filter(n=>{
+    const mq=!q||[n.tipo,n.cat,n.establecimiento,n.zona,n.obs].join(' ').toLowerCase().includes(q);
+    return mq&&(!est||n.estado===est);
+  });
+  if(!data.length){
+    tbody.innerHTML=`<tr><td colspan="10" style="text-align:center;padding:2.5rem;color:var(--gris)">Sin lotes cargados</td></tr>`;
+    return;
+  }
+  const ESTS=['Disponible','Reservado','Vendido'];
+  tbody.innerHTML=data.map((n,i)=>{
+    const fbk=n._fbKey||n.id;
+    const estOpts=ESTS.map(e=>`<option value="${e}" ${n.estado===e?'selected':''}>${e}</option>`).join('');
+    const estSel=`<select onchange="setEstadoLote('${fbk}',this.value)" style="padding:4px 7px;border:1px solid var(--gris-light);border-radius:var(--r);font-family:'Syne',sans-serif;font-size:11px;background:var(--blanco)">${estOpts}</select>`;
+    const vendido=n.estado==='Vendido';
+    return`<tr class="${vendido?'row-vendido':''}">
+      <td class="mono">${i+1}</td><td>${fd(n.fecha)}</td><td>${n.tipo||'—'}</td>
+      <td class="${vendido?'tachado':''}">${n.cat||'—'}</td>
+      <td class="mono">${fmtI(n.cab)}</td>
+      <td>${n.establecimiento||'—'}</td><td>${n.zona||'—'}</td>
+      <td class="mono">${n.precio||'A consultar'}</td>
+      <td>${estSel}</td>
+      <td style="white-space:nowrap"><button class="btn btn-danger btn-sm" onclick="eliminarLote('${fbk}')">✕</button></td>
+    </tr>`;
+  }).join('');
+}
+async function guardarLote(){
+  const neg={
+    id:Date.now(),
+    tipo:$('lo-tipo').value,
+    cat:$('lo-cat').value.trim(),
+    cab:parseFloat($('lo-cab').value)||0,
+    establecimiento:$('lo-establecimiento').value.trim(),
+    zona:$('lo-zona').value.trim(),
+    precio:$('lo-precio').value.trim(),
+    fecha:$('lo-fecha').value||today(),
+    estado:$('lo-estado').value,
+    obs:$('lo-obs').value.trim()
+  };
+  if(!neg.cat){alert('Ingresá la categoría del lote.');return;}
+  const fbKey=await fbPush('negocios/lotes', neg);
+  if(fbKey){ neg._fbKey=fbKey; db.lotes.push(neg); }
+  cerrarModal('lote');
+  ['lo-cat','lo-cab','lo-establecimiento','lo-zona','lo-precio','lo-obs'].forEach(id=>{const el=$(id);if(el)el.value='';});
+  $('lo-fecha').value=today();
+  renderLotes();
+}
+async function eliminarLote(fbKey){
+  if(!confirm('¿Eliminar este lote?'))return;
+  await fbDelete(`negocios/lotes/${fbKey}`);
+  db.lotes=db.lotes.filter(n=>(n._fbKey||n.id.toString())!==fbKey.toString());
+  renderLotes();
+}
+async function setEstadoLote(fbKey, val){
+  const n=db.lotes.find(x=>(x._fbKey||x.id.toString())===fbKey.toString());
+  if(!n) return;
+  n.estado=val;
+  setSyncBadge('syncing');
+  try{
+    await set(ref(rtdb,`negocios/lotes/${fbKey}/estado`),val);
+    setSyncBadge('ok');
+  } catch(e){ setSyncBadge('error'); }
+  renderLotes();
+}
+
+// ── MERCADO: CAMPOS EN VENTA ──────────────────────
+function renderCampos(){
+  const q=($('q-campo')?.value||'').toLowerCase();
+  const est=$('est-campo')?.value||'';
+  const tbody=$('tbody-campo'); if(!tbody)return;
+  let data=db.campos.filter(n=>{
+    const mq=!q||[n.nombre,n.provincia,n.partido,n.tipo,n.desc,n.obs].join(' ').toLowerCase().includes(q);
+    return mq&&(!est||n.estado===est);
+  });
+  if(!data.length){
+    tbody.innerHTML=`<tr><td colspan="9" style="text-align:center;padding:2.5rem;color:var(--gris)">Sin campos cargados</td></tr>`;
+    return;
+  }
+  const ESTS=['Disponible','Reservado','Vendido'];
+  tbody.innerHTML=data.map((n,i)=>{
+    const fbk=n._fbKey||n.id;
+    const estOpts=ESTS.map(e=>`<option value="${e}" ${n.estado===e?'selected':''}>${e}</option>`).join('');
+    const estSel=`<select onchange="setEstadoCampo('${fbk}',this.value)" style="padding:4px 7px;border:1px solid var(--gris-light);border-radius:var(--r);font-family:'Syne',sans-serif;font-size:11px;background:var(--blanco)">${estOpts}</select>`;
+    const vendido=n.estado==='Vendido';
+    return`<tr class="${vendido?'row-vendido':''}">
+      <td class="mono">${i+1}</td>
+      <td class="${vendido?'tachado':''}">${n.nombre||'—'}</td>
+      <td>${[n.provincia,n.partido].filter(Boolean).join(' / ')||'—'}</td>
+      <td class="mono">${fmtI(n.ha)}</td>
+      <td>${n.tipo||'—'}</td>
+      <td class="mono">${n.precio?'US$'+fmtI(n.precio):'—'}</td>
+      <td class="mono">${n.precioHa?'US$'+fmtI(Math.round(n.precioHa)):'—'}</td>
+      <td>${estSel}</td>
+      <td style="white-space:nowrap"><button class="btn btn-danger btn-sm" onclick="eliminarCampo('${fbk}')">✕</button></td>
+    </tr>`;
+  }).join('');
+}
+async function guardarCampo(){
+  const ha=parseFloat($('ca-ha').value)||0;
+  const precio=parseFloat($('ca-precio').value)||0;
+  const precioHa=ha>0?precio/ha:0;
+  const neg={
+    id:Date.now(),
+    nombre:$('ca-nombre').value.trim(),
+    provincia:$('ca-provincia').value.trim(),
+    partido:$('ca-partido').value.trim(),
+    ha, tipo:$('ca-tipo').value,
+    precio, precioHa,
+    estado:$('ca-estado').value,
+    desc:$('ca-desc').value.trim(),
+    obs:$('ca-obs').value.trim()
+  };
+  if(!neg.nombre){alert('Ingresá la denominación del campo.');return;}
+  const fbKey=await fbPush('negocios/campos', neg);
+  if(fbKey){ neg._fbKey=fbKey; db.campos.push(neg); }
+  cerrarModal('campo');
+  ['ca-nombre','ca-provincia','ca-partido','ca-ha','ca-precio','ca-precio-ha','ca-desc','ca-obs'].forEach(id=>{const el=$(id);if(el)el.value='';});
+  renderCampos();
+}
+async function eliminarCampo(fbKey){
+  if(!confirm('¿Eliminar este campo?'))return;
+  await fbDelete(`negocios/campos/${fbKey}`);
+  db.campos=db.campos.filter(n=>(n._fbKey||n.id.toString())!==fbKey.toString());
+  renderCampos();
+}
+async function setEstadoCampo(fbKey, val){
+  const n=db.campos.find(x=>(x._fbKey||x.id.toString())===fbKey.toString());
+  if(!n) return;
+  n.estado=val;
+  setSyncBadge('syncing');
+  try{
+    await set(ref(rtdb,`negocios/campos/${fbKey}/estado`),val);
+    setSyncBadge('ok');
+  } catch(e){ setSyncBadge('error'); }
+  renderCampos();
+}
+
 window.navTo=navTo; window.abrirModal=abrirModal; window.cerrarModal=cerrarModal;
 window.calcG=calcG; window.calcI=calcI; window.calcV=calcV;
 window.addFilaFaena=addFilaFaena; window.addFilaLiq=addFilaLiq;
@@ -1877,6 +2127,8 @@ window.guardar=guardar; window.eliminar=eliminar;
 window.renderTabla=renderTabla; window.renderLiq=renderLiq;
 window.switchLiqTab=switchLiqTab; window.poblarLiq=poblarLiq;
 window.liqDirect=liqDirect; window.toggleLiqExt=toggleLiqExt; window.setEstado=setEstado; window.renderLiqExternas=renderLiqExternas; window.renderResumenMensual=renderResumenMensual; window.toggleCat2=toggleCat2;
+window.calcCampo=calcCampo; window.renderLotes=renderLotes; window.guardarLote=guardarLote; window.eliminarLote=eliminarLote; window.setEstadoLote=setEstadoLote;
+window.renderCampos=renderCampos; window.guardarCampo=guardarCampo; window.eliminarCampo=eliminarCampo; window.setEstadoCampo=setEstadoCampo;
 
 // ── ARRANCAR ──────────────────────────────────────
 // initDB se llama desde onAuthStateChanged al hacer login

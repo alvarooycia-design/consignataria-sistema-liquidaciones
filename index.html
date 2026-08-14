@@ -622,7 +622,7 @@ tbody tr:hover{background:var(--crema)}
 <script type="module">
 // ── FIREBASE SDK ──────────────────────────────────
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
 import { getDatabase, ref, get, set, push, remove } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js';
 
 const firebaseConfig = {
@@ -655,18 +655,24 @@ const loginHTML = `
         <input type="password" id="login-pass" placeholder="••••••••" style="width:100%;padding:10px 12px;border:1px solid var(--gris-light);border-radius:4px;font-family:'Syne',sans-serif;font-size:14px;background:var(--blanco);color:var(--negro)">
       </div>
       <div id="login-error" style="font-size:12px;color:var(--rojo);display:none;text-align:center;font-family:'IBM Plex Mono',monospace"></div>
+      <div id="login-info" style="font-size:12px;color:var(--verde-mid);display:none;text-align:center;font-family:'IBM Plex Mono',monospace"></div>
       <button id="login-btn" onclick="doLogin()" style="background:var(--verde);color:var(--crema);border:none;border-radius:4px;padding:11px;font-size:14px;font-weight:600;font-family:'Syne',sans-serif;cursor:pointer;margin-top:4px">Ingresar</button>
+      <button id="forgot-btn" onclick="doForgotPassword()" type="button" style="background:none;border:none;color:var(--gris);font-size:12px;font-family:'Syne',sans-serif;cursor:pointer;text-decoration:underline;padding:2px">¿Olvidaste tu contraseña?</button>
     </div>
   </div>
 </div>`;
 document.body.insertAdjacentHTML('beforeend', loginHTML);
 
 window.doLogin = async function(){
-  const email = document.getElementById('login-email').value.trim();
+  const emailEl = document.getElementById('login-email');
+  if(!emailEl) return; // login screen no está en pantalla (ya hay sesión iniciada)
+  const email = emailEl.value.trim();
   const pass  = document.getElementById('login-pass').value;
   const err   = document.getElementById('login-error');
+  const info  = document.getElementById('login-info');
   const btn   = document.getElementById('login-btn');
   err.style.display='none';
+  if(info) info.style.display='none';
   btn.textContent='Ingresando...'; btn.disabled=true;
   try {
     await signInWithEmailAndPassword(auth, email, pass);
@@ -676,7 +682,30 @@ window.doLogin = async function(){
     btn.textContent='Ingresar'; btn.disabled=false;
   }
 };
-document.addEventListener('keydown', e=>{ if(e.key==='Enter') window.doLogin(); });
+
+window.doForgotPassword = async function(){
+  const emailEl = document.getElementById('login-email');
+  if(!emailEl) return;
+  const email = emailEl.value.trim();
+  const err  = document.getElementById('login-error');
+  const info = document.getElementById('login-info');
+  err.style.display='none'; info.style.display='none';
+  if(!email){
+    err.textContent = 'Escribí tu email arriba y volvé a tocar el enlace.';
+    err.style.display='block';
+    return;
+  }
+  try {
+    await sendPasswordResetEmail(auth, email);
+    info.textContent = 'Te enviamos un email a ' + email + ' con un link para crear una contraseña nueva.';
+    info.style.display='block';
+  } catch(e) {
+    err.textContent = 'No pudimos enviar el email. Revisá que esté bien escrito.';
+    err.style.display='block';
+  }
+};
+
+document.addEventListener('keydown', e=>{ if(e.key==='Enter' && document.getElementById('login-screen')) window.doLogin(); });
 
 window.cerrarSesion = async function(){
   await signOut(auth);
